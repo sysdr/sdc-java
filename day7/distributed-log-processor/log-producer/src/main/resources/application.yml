@@ -1,0 +1,77 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /producer
+
+spring:
+  application:
+    name: log-producer
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      batch-size: 16384
+      linger-ms: 5
+      buffer-memory: 33554432
+      compression-type: snappy
+      enable-idempotence: true
+      properties:
+        max.in.flight.requests.per.connection: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+app:
+  kafka:
+    log-events-topic: log-events
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      log-ingestion:
+        register-health-indicator: true
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        record-exceptions:
+          - java.lang.Exception
+  ratelimiter:
+    instances:
+      log-ingestion:
+        limit-for-period: 100
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+      batch-ingestion:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+
+logging:
+  level:
+    com.example.logprocessor: INFO
+    org.springframework.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

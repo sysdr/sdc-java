@@ -1,0 +1,45 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Log Processing System Dashboard",
+    "tags": ["log-processing"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Log Ingestion Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(log_ingestion_total[5m])",
+            "legendFormat": "Logs/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "value"
+            },
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "red", "value": 80}
+              ]
+            }
+          }
+        },
+        "options": {
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": ["lastNotNull"]
+          }
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  }
+}
