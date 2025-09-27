@@ -1,0 +1,58 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: log-producer
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/logs/**
+        - id: consumer-health
+          uri: http://localhost:8082
+          predicates:
+            - Path=/consumer/**
+          filters:
+            - StripPrefix=1
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+# Circuit breaker configuration (disabled for now)
+# resilience4j:
+#   circuitbreaker:
+#     instances:
+#       log-producer-cb:
+#         failure-rate-threshold: 50
+#         wait-duration-in-open-state: 10s
+#         sliding-window-size: 10
+#         minimum-number-of-calls: 5
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info,gateway
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging configuration
+logging:
+  level:
+    com.example.logprocessor: DEBUG
+    org.springframework.cloud.gateway: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
