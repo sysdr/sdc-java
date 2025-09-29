@@ -1,0 +1,34 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+  
+  cloud:
+    gateway:
+      routes:
+        - id: log-generator
+          uri: http://localhost:8080
+          predicates:
+            - Path=/api/v1/generator/**
+          filters:
+            - StripPrefix=0
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+        - id: actuator
+          uri: http://localhost:8080
+          predicates:
+            - Path=/actuator/**
+
+  redis:
+    host: localhost
+    port: 6379
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,gateway
