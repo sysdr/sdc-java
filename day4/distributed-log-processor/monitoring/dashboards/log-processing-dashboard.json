@@ -1,0 +1,36 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Log Processing System Dashboard",
+    "tags": ["log-processing"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Logs Processed per Second",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(logs_processed_total[1m])",
+            "legendFormat": "Logs/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Parse Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(log_parse_success_total[5m]) / (rate(log_parse_success_total[5m]) + rate(log_parse_failure_total[5m])) * 100",
+            "legendFormat": "Success %"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      }
+    ],
+    "time": {"from": "now-1h", "to": "now"},
+    "refresh": "5s"
+  }
+}

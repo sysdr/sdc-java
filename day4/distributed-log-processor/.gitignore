@@ -1,0 +1,33 @@
+# Compiled class files
+*.class
+target/
+*.jar
+*.war
+*.nar
+*.ear
+
+# IDE files
+.idea/
+*.iml
+*.iws
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
+
+# Environment
+.env
+
+# Testing
+test-output/
