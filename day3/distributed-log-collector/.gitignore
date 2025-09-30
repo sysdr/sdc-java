@@ -1,0 +1,16 @@
+target/
+*.jar
+*.war
+*.ear
+*.class
+.settings/
+.project
+.classpath
+.idea/
+*.iml
+.vscode/
+.DS_Store
+logs/
+*.log
+docker-compose.override.yml
+.env
