@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Log Processing System - Monitoring Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .service-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+        }
+        .service-card h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status.up {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.down {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status.loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .metrics {
+            margin-top: 15px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            font-weight: 500;
+            color: #666;
+        }
+        .metric-value {
+            font-weight: bold;
+            color: #333;
+        }
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .last-updated {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .response-time {
+            font-size: 11px;
+            color: #28a745;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Distributed Log Processing System</h1>
+            <p>Real-time Monitoring Dashboard</p>
+            <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+        </div>
+
+        <div class="services-grid">
+            <div class="service-card">
+                <h3>🌐 API Gateway (Port 8080)</h3>
+                <div id="gateway-status" class="status loading">Loading...</div>
+                <div id="gateway-metrics" class="metrics">
+                    <div class="metric">
+                        <span class="metric-label">Uptime:</span>
+                        <span class="metric-value" id="gateway-uptime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Memory Used:</span>
+                        <span class="metric-value" id="gateway-memory">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Log Queries:</span>
+                        <span class="metric-value" id="gateway-queries">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Database:</span>
+                        <span class="metric-value" id="gateway-db">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Response Time:</span>
+                        <span class="metric-value" id="gateway-response">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <h3>📝 Log Producer (Port 8081)</h3>
+                <div id="producer-status" class="status loading">Loading...</div>
+                <div id="producer-metrics" class="metrics">
+                    <div class="metric">
+                        <span class="metric-label">Uptime:</span>
+                        <span class="metric-value" id="producer-uptime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Memory Used:</span>
+                        <span class="metric-value" id="producer-memory">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Logs Sent:</span>
+                        <span class="metric-value" id="producer-sent">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Kafka Status:</span>
+                        <span class="metric-value" id="producer-kafka">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Response Time:</span>
+                        <span class="metric-value" id="producer-response">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <h3>📊 Log Consumer (Port 8082)</h3>
+                <div id="consumer-status" class="status loading">Loading...</div>
+                <div id="consumer-metrics" class="metrics">
+                    <div class="metric">
+                        <span class="metric-label">Uptime:</span>
+                        <span class="metric-value" id="consumer-uptime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Memory Used:</span>
+                        <span class="metric-value" id="consumer-memory">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Database Status:</span>
+                        <span class="metric-value" id="consumer-db">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Kafka Status:</span>
+                        <span class="metric-value" id="consumer-kafka">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Response Time:</span>
+                        <span class="metric-value" id="consumer-response">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="service-card">
+            <h3>📈 Quick Links</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <a href="http://localhost:8080/" target="_blank" style="text-decoration: none; color: #667eea;">API Gateway Root</a>
+                <a href="http://localhost:8081/" target="_blank" style="text-decoration: none; color: #667eea;">Log Producer Root</a>
+                <a href="http://localhost:8082/" target="_blank" style="text-decoration: none; color: #667eea;">Log Consumer Root</a>
+                <a href="http://localhost:8080/actuator/health" target="_blank" style="text-decoration: none; color: #667eea;">API Gateway Health</a>
+                <a href="http://localhost:8081/actuator/health" target="_blank" style="text-decoration: none; color: #667eea;">Producer Health</a>
+                <a href="http://localhost:8082/actuator/health" target="_blank" style="text-decoration: none; color: #667eea;">Consumer Health</a>
+                <a href="http://localhost:8080/h2-console" target="_blank" style="text-decoration: none; color: #667eea;">H2 Database Console</a>
+                <a href="http://localhost:8080/actuator/prometheus" target="_blank" style="text-decoration: none; color: #667eea;">API Gateway Metrics</a>
+            </div>
+        </div>
+
+        <div class="last-updated" id="last-updated">
+            Last updated: Never
+        </div>
+    </div>
+
+    <script>
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatUptime(seconds) {
+            if (!seconds) return '0s';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${hours}h ${minutes}m ${secs}s`;
+        }
+
+        function updateServiceCard(serviceName, data) {
+            // Update status
+            const statusElement = document.getElementById(`${serviceName}-status`);
+            statusElement.textContent = data.status;
+            statusElement.className = `status ${data.status.toLowerCase()}`;
+
+            // Update metrics based on service
+            if (serviceName === 'gateway') {
+                document.getElementById('gateway-uptime').textContent = formatUptime(data.uptime);
+                document.getElementById('gateway-memory').textContent = formatBytes(data.memory);
+                document.getElementById('gateway-queries').textContent = data.queries || 0;
+                document.getElementById('gateway-db').textContent = data.db || 'Unknown';
+                document.getElementById('gateway-response').innerHTML = 
+                    data.responseTime ? `${(data.responseTime * 1000).toFixed(1)}ms` : '-';
+            } else if (serviceName === 'producer') {
+                document.getElementById('producer-uptime').textContent = formatUptime(data.uptime);
+                document.getElementById('producer-memory').textContent = formatBytes(data.memory);
+                document.getElementById('producer-sent').textContent = data.sent || 0;
+                document.getElementById('producer-kafka').textContent = data.kafka || 'Unknown';
+                document.getElementById('producer-response').innerHTML = 
+                    data.responseTime ? `${(data.responseTime * 1000).toFixed(1)}ms` : '-';
+            } else if (serviceName === 'consumer') {
+                document.getElementById('consumer-uptime').textContent = formatUptime(data.uptime);
+                document.getElementById('consumer-memory').textContent = formatBytes(data.memory);
+                document.getElementById('consumer-db').textContent = data.db || 'Unknown';
+                document.getElementById('consumer-kafka').textContent = data.kafka || 'Unknown';
+                document.getElementById('consumer-response').innerHTML = 
+                    data.responseTime ? `${(data.responseTime * 1000).toFixed(1)}ms` : '-';
+            }
+        }
+
+        async function fetchServiceMetrics(service) {
+            try {
+                const response = await fetch(`http://localhost:8084/api/metrics?service=${service}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Extract relevant metrics
+                const metrics = data.metrics || {};
+                const health = data.health || {};
+                
+                return {
+                    status: health.status || 'DOWN',
+                    uptime: metrics.process_uptime_seconds || 0,
+                    memory: metrics.jvm_memory_used_bytes || 0,
+                    queries: metrics.log_queries_total || 0,
+                    sent: metrics.logs_sent_total || 0,
+                    db: health.components?.db?.details?.database || 'Unknown',
+                    kafka: health.components?.kafka?.status || 'Disconnected',
+                    responseTime: data.responseTime
+                };
+            } catch (error) {
+                console.error(`Error fetching metrics for ${service}:`, error);
+                return {
+                    status: 'DOWN',
+                    uptime: 0,
+                    memory: 0,
+                    queries: 0,
+                    sent: 0,
+                    db: 'Unknown',
+                    kafka: 'Unknown',
+                    responseTime: null
+                };
+            }
+        }
+
+        async function refreshData() {
+            try {
+                // Get status of all services first
+                const statusResponse = await fetch('http://localhost:8084/api/status');
+                const statusData = await statusResponse.json();
+                
+                // Update each service
+                for (const [service, statusInfo] of Object.entries(statusData)) {
+                    if (statusInfo.status === 'UP') {
+                        // Fetch detailed metrics
+                        const metrics = await fetchServiceMetrics(service);
+                        metrics.responseTime = statusInfo.response_time;
+                        updateServiceCard(service, metrics);
+                    } else {
+                        // Service is down
+                        updateServiceCard(service, {
+                            status: 'DOWN',
+                            uptime: 0,
+                            memory: 0,
+                            queries: 0,
+                            sent: 0,
+                            db: 'Unknown',
+                            kafka: 'Unknown',
+                            responseTime: null
+                        });
+                    }
+                }
+                
+                // Update last updated time
+                document.getElementById('last-updated').textContent = 
+                    `Last updated: ${new Date().toLocaleTimeString()}`;
+                    
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                // Show error in the UI
+                document.getElementById('last-updated').textContent = 
+                    `Error: ${error.message} - Last updated: ${new Date().toLocaleTimeString()}`;
+            }
+        }
+
+        // Initial load
+        refreshData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(refreshData, 30000);
+
+        // Add some visual feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Distributed Log Processing System Dashboard Loaded');
+            console.log('📊 Fetching real-time metrics from services...');
+        });
+    </script>
+</body>
+</html>
