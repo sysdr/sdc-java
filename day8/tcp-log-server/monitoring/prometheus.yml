@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'tcp-log-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['log-server:8080']
+        labels:
+          service: 'log-server'

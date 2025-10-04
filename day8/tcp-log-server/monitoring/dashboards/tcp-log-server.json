@@ -1,0 +1,39 @@
+{
+  "dashboard": {
+    "title": "TCP Log Server Dashboard",
+    "panels": [
+      {
+        "title": "Active Connections",
+        "targets": [
+          {
+            "expr": "tcp_active_connections"
+          }
+        ]
+      },
+      {
+        "title": "Messages Received Rate",
+        "targets": [
+          {
+            "expr": "rate(log_messages_received_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Messages Dropped Rate",
+        "targets": [
+          {
+            "expr": "rate(log_messages_dropped_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Database Write Duration",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(db_batch_write_duration_bucket[1m]))"
+          }
+        ]
+      }
+    ]
+  }
+}

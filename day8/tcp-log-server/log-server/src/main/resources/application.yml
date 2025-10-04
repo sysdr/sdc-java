@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: tcp-log-server
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/logdb
+    username: loguser
+    password: logpass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+
+server:
+  port: 8080
+
+# TCP Server Configuration
+tcp:
+  server:
+    port: 9090
+    max-connections: 1000
+    idle-timeout-seconds: 30
+
+# Buffer Configuration
+buffer:
+  max-size: 10000
+  batch-size: 1000
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      database:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+
+logging:
+  level:
+    root: INFO
+    com.example.logserver: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
