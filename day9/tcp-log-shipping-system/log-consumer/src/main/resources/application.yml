@@ -1,0 +1,57 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: log-consumer
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/logsdb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  redis:
+    host: redis
+    port: 6379
+  
+  kafka:
+    bootstrap-servers: kafka:29092
+    consumer:
+      group-id: log-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+# Kafka Configuration
+kafka:
+  topic: logs
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.logconsumer: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG

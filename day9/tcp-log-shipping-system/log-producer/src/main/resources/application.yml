@@ -1,0 +1,44 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: log-producer
+
+# TCP Log Shipper Configuration
+log:
+  shipper:
+    host: log-receiver
+    port: 9090
+    batch-size: 100
+    buffer-capacity: 10000
+
+# Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      logShipper:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+        permitted-number-of-calls-in-half-open-state: 3
+        minimum-number-of-calls: 5
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.logproducer: DEBUG
+    io.github.resilience4j: INFO

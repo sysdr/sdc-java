@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "title": "TCP Log Shipping System",
+    "panels": [
+      {
+        "title": "Logs Sent Rate",
+        "targets": [
+          {
+            "expr": "rate(logs_sent_total[1m])",
+            "legendFormat": "Logs/sec"
+          }
+        ]
+      },
+      {
+        "title": "Buffer Depth",
+        "targets": [
+          {
+            "expr": "buffer_depth",
+            "legendFormat": "Buffer Size"
+          }
+        ]
+      },
+      {
+        "title": "Connection Failures",
+        "targets": [
+          {
+            "expr": "rate(connection_failures_total[5m])",
+            "legendFormat": "Failures/sec"
+          }
+        ]
+      }
+    ]
+  }
+}
