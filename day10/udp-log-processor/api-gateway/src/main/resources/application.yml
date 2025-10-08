@@ -1,0 +1,56 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: api-gateway
+  
+  cloud:
+    gateway:
+      routes:
+        - id: log-producer
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/logs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: logProducerCircuitBreaker
+                fallbackUri: forward:/fallback/logs
+        
+        - id: log-consumer
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/consumer/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: logConsumerCircuitBreaker
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      logProducerCircuitBreaker:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        permitted-number-of-calls-in-half-open-state: 3
+      logConsumerCircuitBreaker:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics,gateway
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

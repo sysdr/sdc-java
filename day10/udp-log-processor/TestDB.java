@@ -1,0 +1,1 @@
+import java.sql.*; public class TestDB { public static void main(String[] args) { try { Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/logdb", "loguser", "logpass"); System.out.println("Connection successful!"); conn.close(); } catch (Exception e) { System.out.println("Connection failed: " + e.getMessage()); } } }

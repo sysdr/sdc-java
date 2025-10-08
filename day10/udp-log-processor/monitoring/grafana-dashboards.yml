@@ -1,0 +1,23 @@
+apiVersion: 1
+
+providers:
+  - name: 'UDP Log Processing'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+
+# Key Metrics to Monitor:
+# - udp.messages.sent (Counter)
+# - udp.messages.retried (Counter)
+# - udp.messages.failed (Counter)
+# - udp.send.duration (Timer)
+# - udp.packets.received (Counter)
+# - udp.packets.processed (Counter)
+# - kafka.messages.processed (Counter)
+# - Circuit Breaker states
+# - JVM metrics (heap, threads, GC)
