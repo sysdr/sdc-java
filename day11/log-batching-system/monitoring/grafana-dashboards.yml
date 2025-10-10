@@ -1,0 +1,27 @@
+apiVersion: 1
+
+providers:
+  - name: 'Log Batching System'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+
+# Key Metrics to Monitor:
+# - logs.received (counter)
+# - logs.sent (counter)
+# - logs.dropped (counter)
+# - batches.sent (counter)
+# - batch.flush.duration (timer)
+# - buffer.size (gauge)
+# - logs.processed (counter)
+#
+# Query Examples:
+# - Throughput: rate(logs_sent_total[1m])
+# - Drop Rate: rate(logs_dropped_total[1m])
+# - Avg Batch Size: logs_sent_total / batches_sent_total
+# - Buffer Utilization: buffer_size / buffer_capacity * 100
