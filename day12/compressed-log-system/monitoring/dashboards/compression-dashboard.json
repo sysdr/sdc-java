@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Log Compression Metrics",
+    "panels": [
+      {
+        "title": "Compression Ratio by Algorithm",
+        "targets": [
+          {
+            "expr": "compression_ratio",
+            "legendFormat": "{{algorithm}}"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Bytes Saved",
+        "targets": [
+          {
+            "expr": "rate(compression_bytes_saved_total[1m])",
+            "legendFormat": "{{algorithm}}"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Compression Latency P99",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, compression_latency_bucket)",
+            "legendFormat": "{{algorithm}}"
+          }
+        ],
+        "type": "graph"
+      }
+    ]
+  }
+}
