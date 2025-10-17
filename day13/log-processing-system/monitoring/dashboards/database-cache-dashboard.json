@@ -1,0 +1,516 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Database & Cache Performance Dashboard",
+    "tags": ["postgresql", "redis", "database", "cache", "performance"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Database & Cache Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"postgres\"}",
+            "legendFormat": "PostgreSQL",
+            "refId": "A"
+          },
+          {
+            "expr": "up{job=\"redis\"}",
+            "legendFormat": "Redis",
+            "refId": "B"
+          },
+          {
+            "expr": "hikaricp_connections_active{application=\"log-consumer\"} > 0",
+            "legendFormat": "DB Pool Active",
+            "refId": "C"
+          },
+          {
+            "expr": "redis_commands_total{application=\"log-consumer\"} > 0",
+            "legendFormat": "Redis Commands",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "UP",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "PostgreSQL Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{application=\"log-consumer\"}",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "hikaricp_connections_idle{application=\"log-consumer\"}",
+            "legendFormat": "Idle Connections",
+            "refId": "B"
+          },
+          {
+            "expr": "hikaricp_connections{application=\"log-consumer\"}",
+            "legendFormat": "Total Connections",
+            "refId": "C"
+          },
+          {
+            "expr": "hikaricp_connections_pending{application=\"log-consumer\"}",
+            "legendFormat": "Pending Connections",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "id": 3,
+        "title": "PostgreSQL Query Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_creation_seconds{application=\"log-consumer\"}",
+            "legendFormat": "Connection Creation Time",
+            "refId": "A"
+          },
+          {
+            "expr": "hikaricp_connections_usage_seconds{application=\"log-consumer\"}",
+            "legendFormat": "Connection Usage Time",
+            "refId": "B"
+          },
+          {
+            "expr": "hikaricp_connections_timeout_total{application=\"log-consumer\"}",
+            "legendFormat": "Connection Timeouts",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        }
+      },
+      {
+        "id": 4,
+        "title": "Redis Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(redis_commands_total{application=\"log-consumer\"}[1m])",
+            "legendFormat": "Commands/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(redis_commands_duration_seconds_total{application=\"log-consumer\"}[1m])",
+            "legendFormat": "Command Duration/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "redis_commands_total{application=\"log-consumer\"}",
+            "legendFormat": "Total Commands",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate/Count",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 5,
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes{application=\"log-consumer\"}",
+            "legendFormat": "Used Memory",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_memory_max_bytes{application=\"log-consumer\"}",
+            "legendFormat": "Max Memory",
+            "refId": "B"
+          },
+          {
+            "expr": "redis_memory_used_bytes{application=\"log-consumer\"} / redis_memory_max_bytes{application=\"log-consumer\"} * 100",
+            "legendFormat": "Memory Usage %",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes/Percentage",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        }
+      },
+      {
+        "id": 6,
+        "title": "Database Write Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(log_consumer_processed[1m])",
+            "legendFormat": "Logs Processed/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(log_consumer_error[1m])",
+            "legendFormat": "Processing Errors/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(log_consumer_processed[1m]) - rate(log_consumer_error[1m])",
+            "legendFormat": "Success Rate/sec",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Events/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 7,
+        "title": "Cache Hit/Miss Ratio",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(redis_cache_hits_total{application=\"log-consumer\"}[1m])",
+            "legendFormat": "Cache Hits/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(redis_cache_misses_total{application=\"log-consumer\"}[1m])",
+            "legendFormat": "Cache Misses/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(redis_cache_hits_total{application=\"log-consumer\"}[1m]) / (rate(redis_cache_hits_total{application=\"log-consumer\"}[1m]) + rate(redis_cache_misses_total{application=\"log-consumer\"}[1m])) * 100",
+            "legendFormat": "Hit Rate %",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate/Percentage",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "id": 8,
+        "title": "Log Level Distribution in Cache",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "redis_cache_entries by (level)",
+            "legendFormat": "{{level}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 28
+        }
+      },
+      {
+        "id": 9,
+        "title": "Database Query Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(hikaricp_connections_usage_seconds_bucket{application=\"log-consumer\"}[5m]))",
+            "legendFormat": "p50 Query Time",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(hikaricp_connections_usage_seconds_bucket{application=\"log-consumer\"}[5m]))",
+            "legendFormat": "p95 Query Time",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(hikaricp_connections_usage_seconds_bucket{application=\"log-consumer\"}[5m]))",
+            "legendFormat": "p99 Query Time",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 28
+        }
+      },
+      {
+        "id": 10,
+        "title": "Redis Key Expiration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(redis_keys_expired_total{application=\"log-consumer\"}[1m])",
+            "legendFormat": "Keys Expired/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_keys_total{application=\"log-consumer\"}",
+            "legendFormat": "Total Keys",
+            "refId": "B"
+          },
+          {
+            "expr": "redis_keys_with_ttl{application=\"log-consumer\"}",
+            "legendFormat": "Keys with TTL",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Keys",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 36
+        }
+      },
+      {
+        "id": 11,
+        "title": "Database Storage Growth",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "log_consumer_processed_total",
+            "legendFormat": "Total Logs Stored",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(log_consumer_processed_total[1h])",
+            "legendFormat": "Logs Stored/hour",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Logs",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 36
+        }
+      },
+      {
+        "id": 12,
+        "title": "Connection Pool Efficiency",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{application=\"log-consumer\"} / hikaricp_connections{application=\"log-consumer\"} * 100",
+            "legendFormat": "Pool Utilization %",
+            "refId": "A"
+          },
+          {
+            "expr": "hikaricp_connections_timeout_total{application=\"log-consumer\"}",
+            "legendFormat": "Total Timeouts",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 0,
+          "y": 44
+        }
+      },
+      {
+        "id": 13,
+        "title": "Redis Performance Summary",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(redis_commands_total{application=\"log-consumer\"}[1m])",
+            "legendFormat": "Commands/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_memory_used_bytes{application=\"log-consumer\"} / 1024 / 1024",
+            "legendFormat": "Memory Used (MB)",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 12,
+          "y": 44
+        }
+      }
+    ]
+  }
+}

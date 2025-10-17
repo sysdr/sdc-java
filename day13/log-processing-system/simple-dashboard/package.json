@@ -1,0 +1,27 @@
+{
+  "name": "log-processing-dashboard",
+  "version": "1.0.0",
+  "description": "Simple monitoring dashboard for log processing system",
+  "main": "metrics-server.js",
+  "scripts": {
+    "start": "node metrics-server.js",
+    "dev": "nodemon metrics-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "monitoring",
+    "dashboard",
+    "log-processing",
+    "spring-boot",
+    "metrics"
+  ],
+  "author": "Log Processing System",
+  "license": "MIT"
+}

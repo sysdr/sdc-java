@@ -1,0 +1,48 @@
+server:
+  port: 8081
+  ssl:
+    enabled: false
+
+spring:
+  application:
+    name: log-producer
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      compression-type: lz4
+      acks: all
+      retries: 3
+      batch-size: 16384
+      linger-ms: 10
+    properties:
+      security.protocol: PLAINTEXT
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      kafka-producer:
+        sliding-window-size: 100
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        permitted-number-of-calls-in-half-open-state: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+
+logging:
+  level:
+    com.example.logprocessor: DEBUG
+    org.apache.kafka: WARN

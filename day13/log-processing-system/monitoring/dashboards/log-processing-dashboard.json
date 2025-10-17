@@ -1,0 +1,629 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Log Processing System - Comprehensive Dashboard",
+    "tags": ["log-processing", "kafka", "spring-boot", "tls", "distributed"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Overview - Service Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"api-gateway\"}",
+            "legendFormat": "API Gateway",
+            "refId": "A"
+          },
+          {
+            "expr": "up{job=\"log-producer\"}",
+            "legendFormat": "Log Producer",
+            "refId": "B"
+          },
+          {
+            "expr": "up{job=\"log-consumer\"}",
+            "legendFormat": "Log Consumer",
+            "refId": "C"
+          },
+          {
+            "expr": "up{job=\"kafka\"}",
+            "legendFormat": "Kafka",
+            "refId": "D"
+          },
+          {
+            "expr": "up{job=\"postgres\"}",
+            "legendFormat": "PostgreSQL",
+            "refId": "E"
+          },
+          {
+            "expr": "up{job=\"redis\"}",
+            "legendFormat": "Redis",
+            "refId": "F"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "UP",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Throughput (RPS)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(gateway_requests_total[1m])",
+            "legendFormat": "Gateway Requests/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(log_producer_success_total[1m])",
+            "legendFormat": "Producer Success/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(log_consumer_processed[1m])",
+            "legendFormat": "Consumer Processed/sec",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "id": 3,
+        "title": "Response Time (p95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(gateway_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "Gateway p95",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-producer\"}[5m]))",
+            "legendFormat": "Producer p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-consumer\"}[5m]))",
+            "legendFormat": "Consumer p95",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0,
+            "logBase": 1
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        }
+      },
+      {
+        "id": 4,
+        "title": "JVM Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{application=\"api-gateway\", area=\"heap\"}",
+            "legendFormat": "API Gateway Heap",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_memory_used_bytes{application=\"log-producer\", area=\"heap\"}",
+            "legendFormat": "Producer Heap",
+            "refId": "B"
+          },
+          {
+            "expr": "jvm_memory_used_bytes{application=\"log-consumer\", area=\"heap\"}",
+            "legendFormat": "Consumer Heap",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 5,
+        "title": "JVM GC Activity",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(jvm_gc_pause_seconds_total[1m])",
+            "legendFormat": "GC Pauses/sec",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Pauses/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 12
+        }
+      },
+      {
+        "id": 6,
+        "title": "CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{application=\"api-gateway\"}[1m]) * 100",
+            "legendFormat": "API Gateway CPU %",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(process_cpu_seconds_total{application=\"log-producer\"}[1m]) * 100",
+            "legendFormat": "Producer CPU %",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(process_cpu_seconds_total{application=\"log-consumer\"}[1m]) * 100",
+            "legendFormat": "Consumer CPU %",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 12
+        }
+      },
+      {
+        "id": 7,
+        "title": "Kafka Producer Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(spring_kafka_producer_record_send_total[1m])",
+            "legendFormat": "Records Sent/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(spring_kafka_producer_record_send_failed_total[1m])",
+            "legendFormat": "Records Failed/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "spring_kafka_producer_record_send_total",
+            "legendFormat": "Total Records Sent",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Records/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 8,
+        "title": "Kafka Consumer Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(spring_kafka_consumer_record_fetch_total[1m])",
+            "legendFormat": "Records Consumed/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(log_consumer_processed[1m])",
+            "legendFormat": "Records Processed/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(log_consumer_error[1m])",
+            "legendFormat": "Processing Errors/sec",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Records/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "id": 9,
+        "title": "Circuit Breaker State",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"producer-service\"}",
+            "legendFormat": "Producer Service CB",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"kafka-producer\"}",
+            "legendFormat": "Kafka Producer CB",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "CLOSED",
+                    "color": "green"
+                  },
+                  "1": {
+                    "text": "OPEN",
+                    "color": "red"
+                  },
+                  "2": {
+                    "text": "HALF_OPEN",
+                    "color": "yellow"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 0,
+          "y": 28
+        }
+      },
+      {
+        "id": 10,
+        "title": "Circuit Breaker Failure Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_failure_rate{name=\"producer-service\"}",
+            "legendFormat": "Producer Service Failure Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_circuitbreaker_failure_rate{name=\"kafka-producer\"}",
+            "legendFormat": "Kafka Producer Failure Rate",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Failure Rate",
+            "min": 0,
+            "max": 1
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 28
+        }
+      },
+      {
+        "id": 11,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{application=\"log-consumer\"}",
+            "legendFormat": "PostgreSQL Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "hikaricp_connections_idle{application=\"log-consumer\"}",
+            "legendFormat": "PostgreSQL Idle Connections",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 36
+        }
+      },
+      {
+        "id": 12,
+        "title": "Redis Cache Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_commands_total{application=\"log-consumer\"}",
+            "legendFormat": "Redis Commands Total",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(redis_commands_total{application=\"log-consumer\"}[1m])",
+            "legendFormat": "Redis Commands/sec",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Commands",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 36
+        }
+      },
+      {
+        "id": 13,
+        "title": "TLS Handshake Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"api-gateway\"}[5m]))",
+            "legendFormat": "API Gateway TLS p95",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-producer\"}[5m]))",
+            "legendFormat": "Producer TLS p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-consumer\"}[5m]))",
+            "legendFormat": "Consumer TLS p95",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 44
+        }
+      },
+      {
+        "id": 14,
+        "title": "Error Rate by Service",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=~\"5..\"}[1m]) / rate(http_server_requests_seconds_count[1m]) * 100",
+            "legendFormat": "{{application}} 5xx Error Rate %",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Error Rate %",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 44
+        }
+      },
+      {
+        "id": 15,
+        "title": "Log Level Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "log_consumer_processed_total by (level)",
+            "legendFormat": "{{level}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 52
+        }
+      },
+      {
+        "id": 16,
+        "title": "System Load Average",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "system_load1",
+            "legendFormat": "1m Load Average",
+            "refId": "A"
+          },
+          {
+            "expr": "system_load5",
+            "legendFormat": "5m Load Average",
+            "refId": "B"
+          },
+          {
+            "expr": "system_load15",
+            "legendFormat": "15m Load Average",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Load",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 52
+        }
+      }
+    ]
+  }
+}

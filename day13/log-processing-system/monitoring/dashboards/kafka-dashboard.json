@@ -1,0 +1,343 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Kafka Performance Dashboard",
+    "tags": ["kafka", "performance", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Kafka Cluster Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "kafka_server_kafkaserver_brokerstate",
+            "legendFormat": "Broker State",
+            "refId": "A"
+          },
+          {
+            "expr": "kafka_server_replicamanager_leadercount",
+            "legendFormat": "Leader Count",
+            "refId": "B"
+          },
+          {
+            "expr": "kafka_server_replicamanager_partitioncount",
+            "legendFormat": "Partition Count",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "NotRunning",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "Starting",
+                    "color": "yellow"
+                  },
+                  "2": {
+                    "text": "RecoveringFromUncleanShutdown",
+                    "color": "orange"
+                  },
+                  "3": {
+                    "text": "RunningAsBroker",
+                    "color": "green"
+                  },
+                  "4": {
+                    "text": "RunningAsController",
+                    "color": "blue"
+                  },
+                  "5": {
+                    "text": "PendingControlledShutdown",
+                    "color": "purple"
+                  },
+                  "6": {
+                    "text": "BrokerShuttingDown",
+                    "color": "red"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Topic Throughput",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(kafka_server_brokertopicmetrics_messagesinpersec[1m])",
+            "legendFormat": "Messages In/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(kafka_server_brokertopicmetrics_bytesinpersec[1m])",
+            "legendFormat": "Bytes In/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(kafka_server_brokertopicmetrics_messagesoutpersec[1m])",
+            "legendFormat": "Messages Out/sec",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(kafka_server_brokertopicmetrics_bytesoutpersec[1m])",
+            "legendFormat": "Bytes Out/sec",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "id": 3,
+        "title": "Consumer Lag",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag_sum{group=\"log-consumer-group\"}",
+            "legendFormat": "Total Consumer Lag",
+            "refId": "A"
+          },
+          {
+            "expr": "kafka_consumer_lag{group=\"log-consumer-group\", topic=\"log-events\"}",
+            "legendFormat": "log-events Lag",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Messages",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        }
+      },
+      {
+        "id": 4,
+        "title": "Producer Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(spring_kafka_producer_record_send_total[1m])",
+            "legendFormat": "Records Sent/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(spring_kafka_producer_record_send_failed_total[1m])",
+            "legendFormat": "Records Failed/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(spring_kafka_producer_record_send_total[1m]) - rate(spring_kafka_producer_record_send_failed_total[1m])",
+            "legendFormat": "Success Rate/sec",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Records/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 5,
+        "title": "Consumer Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(spring_kafka_consumer_record_fetch_total[1m])",
+            "legendFormat": "Records Fetched/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(spring_kafka_consumer_record_fetch_failed_total[1m])",
+            "legendFormat": "Records Fetch Failed/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(log_consumer_processed[1m])",
+            "legendFormat": "Records Processed/sec",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Records/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        }
+      },
+      {
+        "id": 6,
+        "title": "Partition Distribution",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag{group=\"log-consumer-group\", topic=\"log-events\"}",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 7,
+        "title": "Kafka JVM Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{job=\"kafka\", area=\"heap\"}",
+            "legendFormat": "Kafka Heap Memory",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_memory_used_bytes{job=\"kafka\", area=\"nonheap\"}",
+            "legendFormat": "Kafka Non-Heap Memory",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "id": 8,
+        "title": "Network I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(kafka_network_requestmetrics_totaltimems[1m])",
+            "legendFormat": "Request Time ms/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(kafka_network_requestmetrics_requests_total[1m])",
+            "legendFormat": "Requests/sec",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 28
+        }
+      },
+      {
+        "id": 9,
+        "title": "Compression Ratio",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "kafka_server_brokertopicmetrics_bytesinpersec / kafka_server_brokertopicmetrics_messagesinpersec",
+            "legendFormat": "Avg Bytes per Message",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 12,
+          "y": 28
+        }
+      }
+    ]
+  }
+}

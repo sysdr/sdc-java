@@ -1,0 +1,35 @@
+server:
+  port: 8080
+  ssl:
+    enabled: false
+
+spring:
+  application:
+    name: api-gateway
+
+services:
+  producer:
+    url: http://localhost:8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      producer-service:
+        sliding-window-size: 100
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30000
+        permitted-number-of-calls-in-half-open-state: 10
+
+logging:
+  level:
+    com.example.logprocessor: DEBUG

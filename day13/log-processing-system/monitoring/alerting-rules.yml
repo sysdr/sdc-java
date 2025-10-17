@@ -1,0 +1,284 @@
+groups:
+  - name: log-processing-system
+    rules:
+      # Service Health Alerts
+      - alert: ServiceDown
+        expr: up{job=~"api-gateway|log-producer|log-consumer"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute"
+
+      - alert: KafkaDown
+        expr: up{job="kafka"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka is down"
+          description: "Kafka broker has been down for more than 30 seconds"
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been down for more than 1 minute"
+
+      # Performance Alerts
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}% for service {{ $labels.application }}"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for service {{ $labels.application }}"
+
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}% for service {{ $labels.application }}"
+
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% for service {{ $labels.application }}"
+
+      # Kafka Alerts
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_lag_sum{group="log-consumer-group"} > 1000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Consumer lag is {{ $value }} messages"
+
+      - alert: KafkaProducerFailures
+        expr: rate(spring_kafka_producer_record_send_failed_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka producer failures detected"
+          description: "Producer failure rate is {{ $value }} failures/sec"
+
+      # Circuit Breaker Alerts
+      - alert: CircuitBreakerOpen
+        expr: resilience4j_circuitbreaker_state{name=~"producer-service|kafka-producer"} == 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit breaker is open"
+          description: "Circuit breaker {{ $labels.name }} is in OPEN state"
+
+      - alert: CircuitBreakerHalfOpen
+        expr: resilience4j_circuitbreaker_state{name=~"producer-service|kafka-producer"} == 2
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Circuit breaker is half-open"
+          description: "Circuit breaker {{ $labels.name }} is in HALF_OPEN state"
+
+      - alert: HighCircuitBreakerFailureRate
+        expr: resilience4j_circuitbreaker_failure_rate{name=~"producer-service|kafka-producer"} > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High circuit breaker failure rate"
+          description: "Failure rate is {{ $value }} for circuit breaker {{ $labels.name }}"
+
+      # Database Alerts
+      - alert: DatabaseConnectionPoolExhausted
+        expr: hikaricp_connections_active{application="log-consumer"} / hikaricp_connections{application="log-consumer"} * 100 > 90
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Connection pool utilization is {{ $value }}%"
+
+      - alert: DatabaseConnectionTimeouts
+        expr: rate(hikaricp_connections_timeout_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection timeouts detected"
+          description: "Connection timeout rate is {{ $value }} timeouts/sec"
+
+      - alert: HighDatabaseQueryTime
+        expr: histogram_quantile(0.95, rate(hikaricp_connections_usage_seconds_bucket[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database query time"
+          description: "95th percentile query time is {{ $value }}s"
+
+      # Redis Alerts
+      - alert: RedisMemoryUsageHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value }}%"
+
+      - alert: RedisCommandFailures
+        expr: rate(redis_commands_failed_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis command failures detected"
+          description: "Redis command failure rate is {{ $value }} failures/sec"
+
+      # TLS Security Alerts
+      - alert: CertificateExpiringSoon
+        expr: (certificate_expiry_timestamp - time()) / 86400 < 7
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Certificate expiring soon"
+          description: "Certificate for {{ $labels.service }} expires in {{ $value }} days"
+
+      - alert: CertificateExpired
+        expr: certificate_expiry_timestamp < time()
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Certificate has expired"
+          description: "Certificate for {{ $labels.service }} has expired"
+
+      - alert: TLSHandshakeFailures
+        expr: rate(tls_handshake_failures_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS handshake failures detected"
+          description: "TLS handshake failure rate is {{ $value }} failures/sec"
+
+      - alert: CertificateHealthCheckFailed
+        expr: certificate_health_check == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Certificate health check failed"
+          description: "Certificate health check failed for {{ $labels.service }}"
+
+      # System Resource Alerts
+      - alert: HighSystemLoad
+        expr: system_load1 > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High system load"
+          description: "System load average is {{ $value }}"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is {{ $value }}% available on {{ $labels.mountpoint }}"
+
+      # Application Specific Alerts
+      - alert: LogProcessingErrors
+        expr: rate(log_consumer_error[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High log processing error rate"
+          description: "Log processing error rate is {{ $value }} errors/sec"
+
+      - alert: LogProcessingLag
+        expr: rate(log_consumer_processed[1m]) < rate(spring_kafka_consumer_record_fetch_total[1m]) * 0.8
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Log processing lag detected"
+          description: "Processing rate is significantly lower than consumption rate"
+
+      - alert: GatewayRequestFailures
+        expr: rate(gateway_requests_total{status=~"4..|5.."}[5m]) / rate(gateway_requests_total[5m]) * 100 > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High gateway request failure rate"
+          description: "Gateway request failure rate is {{ $value }}%"
+
+      # Bulkhead Alerts
+      - alert: BulkheadRejectedCalls
+        expr: rate(resilience4j_bulkhead_calls_total{kind="rejected"}[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bulkhead rejecting calls"
+          description: "Bulkhead {{ $labels.name }} is rejecting {{ $value }} calls/sec"
+
+      # Rate Limiter Alerts
+      - alert: RateLimiterRejectedCalls
+        expr: rate(resilience4j_ratelimiter_calls_total{kind="not_permitted"}[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limiter rejecting calls"
+          description: "Rate limiter {{ $labels.name }} is rejecting {{ $value }} calls/sec"
+
+      # Retry Alerts
+      - alert: HighRetryFailureRate
+        expr: rate(resilience4j_retry_calls_total{kind="failed_with_retry"}[5m]) / rate(resilience4j_retry_calls_total[5m]) * 100 > 20
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High retry failure rate"
+          description: "Retry failure rate is {{ $value }}% for {{ $labels.name }}"

@@ -1,0 +1,499 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "TLS Security Dashboard",
+    "tags": ["tls", "security", "certificates", "encryption"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "TLS Connection Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"api-gateway\"}",
+            "legendFormat": "API Gateway TLS",
+            "refId": "A"
+          },
+          {
+            "expr": "up{job=\"log-producer\"}",
+            "legendFormat": "Producer TLS",
+            "refId": "B"
+          },
+          {
+            "expr": "up{job=\"log-consumer\"}",
+            "legendFormat": "Consumer TLS",
+            "refId": "C"
+          },
+          {
+            "expr": "up{job=\"kafka\"}",
+            "legendFormat": "Kafka TLS",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "TLS DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "TLS UP",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "TLS Handshake Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{application=\"api-gateway\"}[5m]))",
+            "legendFormat": "API Gateway p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"api-gateway\"}[5m]))",
+            "legendFormat": "API Gateway p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{application=\"api-gateway\"}[5m]))",
+            "legendFormat": "API Gateway p99",
+            "refId": "C"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{application=\"log-producer\"}[5m]))",
+            "legendFormat": "Producer p50",
+            "refId": "D"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-producer\"}[5m]))",
+            "legendFormat": "Producer p95",
+            "refId": "E"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{application=\"log-consumer\"}[5m]))",
+            "legendFormat": "Consumer p50",
+            "refId": "F"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-consumer\"}[5m]))",
+            "legendFormat": "Consumer p95",
+            "refId": "G"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0,
+            "logBase": 1
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "id": 3,
+        "title": "TLS Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=~\"4..\", application=\"api-gateway\"}[1m]) / rate(http_server_requests_seconds_count{application=\"api-gateway\"}[1m]) * 100",
+            "legendFormat": "API Gateway 4xx %",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=~\"5..\", application=\"api-gateway\"}[1m]) / rate(http_server_requests_seconds_count{application=\"api-gateway\"}[1m]) * 100",
+            "legendFormat": "API Gateway 5xx %",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=~\"4..\", application=\"log-producer\"}[1m]) / rate(http_server_requests_seconds_count{application=\"log-producer\"}[1m]) * 100",
+            "legendFormat": "Producer 4xx %",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=~\"5..\", application=\"log-producer\"}[1m]) / rate(http_server_requests_seconds_count{application=\"log-producer\"}[1m]) * 100",
+            "legendFormat": "Producer 5xx %",
+            "refId": "D"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=~\"4..\", application=\"log-consumer\"}[1m]) / rate(http_server_requests_seconds_count{application=\"log-consumer\"}[1m]) * 100",
+            "legendFormat": "Consumer 4xx %",
+            "refId": "E"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=~\"5..\", application=\"log-consumer\"}[1m]) / rate(http_server_requests_seconds_count{application=\"log-consumer\"}[1m]) * 100",
+            "legendFormat": "Consumer 5xx %",
+            "refId": "F"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Error Rate %",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        }
+      },
+      {
+        "id": 4,
+        "title": "Certificate Health Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "certificate_health_check{service=\"api-gateway\"}",
+            "legendFormat": "API Gateway Cert",
+            "refId": "A"
+          },
+          {
+            "expr": "certificate_health_check{service=\"log-producer\"}",
+            "legendFormat": "Producer Cert",
+            "refId": "B"
+          },
+          {
+            "expr": "certificate_health_check{service=\"log-consumer\"}",
+            "legendFormat": "Consumer Cert",
+            "refId": "C"
+          },
+          {
+            "expr": "certificate_health_check{service=\"kafka\"}",
+            "legendFormat": "Kafka Cert",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "UNHEALTHY",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "HEALTHY",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 5,
+        "title": "Certificate Expiration Timeline",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "certificate_expiry_timestamp{service=\"api-gateway\"}",
+            "legendFormat": "API Gateway Expiry",
+            "refId": "A"
+          },
+          {
+            "expr": "certificate_expiry_timestamp{service=\"log-producer\"}",
+            "legendFormat": "Producer Expiry",
+            "refId": "B"
+          },
+          {
+            "expr": "certificate_expiry_timestamp{service=\"log-consumer\"}",
+            "legendFormat": "Consumer Expiry",
+            "refId": "C"
+          },
+          {
+            "expr": "certificate_expiry_timestamp{service=\"kafka\"}",
+            "legendFormat": "Kafka Expiry",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Unix Timestamp",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "Days Until Certificate Expiration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(certificate_expiry_timestamp{service=\"api-gateway\"} - time()) / 86400",
+            "legendFormat": "API Gateway Days",
+            "refId": "A"
+          },
+          {
+            "expr": "(certificate_expiry_timestamp{service=\"log-producer\"} - time()) / 86400",
+            "legendFormat": "Producer Days",
+            "refId": "B"
+          },
+          {
+            "expr": "(certificate_expiry_timestamp{service=\"log-consumer\"} - time()) / 86400",
+            "legendFormat": "Consumer Days",
+            "refId": "C"
+          },
+          {
+            "expr": "(certificate_expiry_timestamp{service=\"kafka\"} - time()) / 86400",
+            "legendFormat": "Kafka Days",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Days",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 7,
+        "title": "TLS Cipher Suites",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "tls_cipher_suite_info",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 8,
+        "title": "TLS Protocol Versions",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "tls_protocol_version by (version)",
+            "legendFormat": "{{version}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        }
+      },
+      {
+        "id": 9,
+        "title": "TLS Connection Count",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "tls_connections_active{service=\"api-gateway\"}",
+            "legendFormat": "API Gateway Active",
+            "refId": "A"
+          },
+          {
+            "expr": "tls_connections_total{service=\"api-gateway\"}",
+            "legendFormat": "API Gateway Total",
+            "refId": "B"
+          },
+          {
+            "expr": "tls_connections_active{service=\"log-producer\"}",
+            "legendFormat": "Producer Active",
+            "refId": "C"
+          },
+          {
+            "expr": "tls_connections_total{service=\"log-producer\"}",
+            "legendFormat": "Producer Total",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 10,
+        "title": "TLS Handshake Failures",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(tls_handshake_failures_total[1m])",
+            "legendFormat": "Handshake Failures/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(tls_certificate_validation_failures_total[1m])",
+            "legendFormat": "Cert Validation Failures/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(tls_cipher_suite_negotiation_failures_total[1m])",
+            "legendFormat": "Cipher Suite Failures/sec",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Failures/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 32
+        }
+      },
+      {
+        "id": 11,
+        "title": "TLS Performance Impact",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"api-gateway\"}[5m])) - histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"api-gateway\", protocol=\"http\"}[5m]))",
+            "legendFormat": "API Gateway TLS Overhead",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-producer\"}[5m])) - histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"log-producer\", protocol=\"http\"}[5m]))",
+            "legendFormat": "Producer TLS Overhead",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 40
+        }
+      }
+    ]
+  }
+}

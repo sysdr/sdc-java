@@ -1,0 +1,497 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Resilience & Circuit Breaker Dashboard",
+    "tags": ["resilience4j", "circuit-breaker", "retry", "timeout", "resilience"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Circuit Breaker States",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"producer-service\"}",
+            "legendFormat": "Producer Service CB",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"kafka-producer\"}",
+            "legendFormat": "Kafka Producer CB",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "CLOSED",
+                    "color": "green"
+                  },
+                  "1": {
+                    "text": "OPEN",
+                    "color": "red"
+                  },
+                  "2": {
+                    "text": "HALF_OPEN",
+                    "color": "yellow"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 2
+                },
+                {
+                  "color": "red",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Circuit Breaker Failure Rates",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_failure_rate{name=\"producer-service\"}",
+            "legendFormat": "Producer Service Failure Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_circuitbreaker_failure_rate{name=\"kafka-producer\"}",
+            "legendFormat": "Kafka Producer Failure Rate",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Failure Rate",
+            "min": 0,
+            "max": 1
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Circuit Breaker Call Counts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"producer-service\", kind=\"successful\"}[1m])",
+            "legendFormat": "Producer Service Successful",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"producer-service\", kind=\"failed\"}[1m])",
+            "legendFormat": "Producer Service Failed",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"producer-service\", kind=\"not_permitted\"}[1m])",
+            "legendFormat": "Producer Service Not Permitted",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"kafka-producer\", kind=\"successful\"}[1m])",
+            "legendFormat": "Kafka Producer Successful",
+            "refId": "D"
+          },
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"kafka-producer\", kind=\"failed\"}[1m])",
+            "legendFormat": "Kafka Producer Failed",
+            "refId": "E"
+          },
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"kafka-producer\", kind=\"not_permitted\"}[1m])",
+            "legendFormat": "Kafka Producer Not Permitted",
+            "refId": "F"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Calls/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "id": 4,
+        "title": "Circuit Breaker State Transitions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"producer-service\"}",
+            "legendFormat": "Producer Service State",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"kafka-producer\"}",
+            "legendFormat": "Kafka Producer State",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "State",
+            "min": 0,
+            "max": 2
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 5,
+        "title": "Circuit Breaker Configuration",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_config{name=\"producer-service\"}",
+            "format": "table",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_circuitbreaker_config{name=\"kafka-producer\"}",
+            "format": "table",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        }
+      },
+      {
+        "id": 6,
+        "title": "Retry Attempts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(resilience4j_retry_calls_total{name=\"producer-service\", kind=\"successful_without_retry\"}[1m])",
+            "legendFormat": "Producer Service No Retry Needed",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(resilience4j_retry_calls_total{name=\"producer-service\", kind=\"successful_with_retry\"}[1m])",
+            "legendFormat": "Producer Service Successful After Retry",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(resilience4j_retry_calls_total{name=\"producer-service\", kind=\"failed_without_retry\"}[1m])",
+            "legendFormat": "Producer Service Failed No Retry",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(resilience4j_retry_calls_total{name=\"producer-service\", kind=\"failed_with_retry\"}[1m])",
+            "legendFormat": "Producer Service Failed After Retry",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Calls/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 7,
+        "title": "Retry Configuration",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "resilience4j_retry_config{name=\"producer-service\"}",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "id": 8,
+        "title": "Bulkhead Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "resilience4j_bulkhead_available_concurrent_calls{name=\"producer-service\"}",
+            "legendFormat": "Producer Service Available Calls",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_bulkhead_max_allowed_concurrent_calls{name=\"producer-service\"}",
+            "legendFormat": "Producer Service Max Calls",
+            "refId": "B"
+          },
+          {
+            "expr": "resilience4j_bulkhead_available_concurrent_calls{name=\"kafka-producer\"}",
+            "legendFormat": "Kafka Producer Available Calls",
+            "refId": "C"
+          },
+          {
+            "expr": "resilience4j_bulkhead_max_allowed_concurrent_calls{name=\"kafka-producer\"}",
+            "legendFormat": "Kafka Producer Max Calls",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Concurrent Calls",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 28
+        }
+      },
+      {
+        "id": 9,
+        "title": "Bulkhead Rejected Calls",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(resilience4j_bulkhead_calls_total{name=\"producer-service\", kind=\"rejected\"}[1m])",
+            "legendFormat": "Producer Service Rejected",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(resilience4j_bulkhead_calls_total{name=\"kafka-producer\", kind=\"rejected\"}[1m])",
+            "legendFormat": "Kafka Producer Rejected",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rejected Calls/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 28
+        }
+      },
+      {
+        "id": 10,
+        "title": "Time Limiter Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(resilience4j_timelimiter_calls_total{name=\"producer-service\", kind=\"successful\"}[1m])",
+            "legendFormat": "Producer Service Timeout Success",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(resilience4j_timelimiter_calls_total{name=\"producer-service\", kind=\"timeout\"}[1m])",
+            "legendFormat": "Producer Service Timeout",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(resilience4j_timelimiter_calls_total{name=\"kafka-producer\", kind=\"successful\"}[1m])",
+            "legendFormat": "Kafka Producer Timeout Success",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(resilience4j_timelimiter_calls_total{name=\"kafka-producer\", kind=\"timeout\"}[1m])",
+            "legendFormat": "Kafka Producer Timeout",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Calls/sec",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 36
+        }
+      },
+      {
+        "id": 11,
+        "title": "Rate Limiter Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "resilience4j_ratelimiter_available_permissions{name=\"producer-service\"}",
+            "legendFormat": "Producer Service Available Permissions",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_ratelimiter_waiting_threads{name=\"producer-service\"}",
+            "legendFormat": "Producer Service Waiting Threads",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(resilience4j_ratelimiter_calls_total{name=\"producer-service\", kind=\"successful\"}[1m])",
+            "legendFormat": "Producer Service Rate Limited Success",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(resilience4j_ratelimiter_calls_total{name=\"producer-service\", kind=\"not_permitted\"}[1m])",
+            "legendFormat": "Producer Service Rate Limited Rejected",
+            "refId": "D"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Count/Rate",
+            "min": 0
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 36
+        }
+      },
+      {
+        "id": 12,
+        "title": "Overall System Resilience Score",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(rate(resilience4j_circuitbreaker_calls_total{kind=\"successful\"}[1m]) / rate(resilience4j_circuitbreaker_calls_total[1m])) * 100",
+            "legendFormat": "Overall Success Rate %",
+            "refId": "A"
+          },
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"producer-service\"} + resilience4j_circuitbreaker_state{name=\"kafka-producer\"}",
+            "legendFormat": "Circuit Breaker Health Score",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 80
+                },
+                {
+                  "color": "green",
+                  "value": 95
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 44
+        }
+      }
+    ]
+  }
+}

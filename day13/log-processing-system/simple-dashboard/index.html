@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Processing System Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8eecec 0%, #723d0c 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+        }
+
+        .status-item.up {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .status-item.down {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .status-item.unknown {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .status-item h4 {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-item .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3748;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin: 20px 0;
+        }
+
+        .refresh-info {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .loading {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Log Processing System</h1>
+            <p>Real-time System Monitoring Dashboard</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Service Health Status -->
+            <div class="card">
+                <h3>🔧 Service Health Status</h3>
+                <div class="status-grid" id="serviceStatus">
+                    <div class="loading">Loading services...</div>
+                </div>
+            </div>
+
+            <!-- System Metrics -->
+            <div class="card">
+                <h3>📊 System Metrics</h3>
+                <div id="systemMetrics">
+                    <div class="loading">Loading metrics...</div>
+                </div>
+            </div>
+
+            <!-- Request Throughput -->
+            <div class="card">
+                <h3>📈 Request Throughput</h3>
+                <div class="chart-container">
+                    <canvas id="throughputChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Response Times -->
+            <div class="card">
+                <h3>⏱️ Response Times</h3>
+                <div class="chart-container">
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- JVM Memory Usage -->
+            <div class="card">
+                <h3>💾 Memory Usage</h3>
+                <div class="chart-container">
+                    <canvas id="memoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Error Rates -->
+            <div class="card">
+                <h3>⚠️ Error Rates</h3>
+                <div class="chart-container">
+                    <canvas id="errorChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="refresh-info">
+            <p>Dashboard refreshes every 5 seconds</p>
+            <div class="timestamp" id="lastUpdate"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const SERVICES = {
+            'api-gateway': { port: 8080, name: 'API Gateway' },
+            'log-producer': { port: 8081, name: 'Log Producer' },
+            'log-consumer': { port: 8082, name: 'Log Consumer' }
+        };
+
+        const INFRASTRUCTURE = {
+            'kafka': { port: 9092, name: 'Kafka' },
+            'postgres': { port: 5432, name: 'PostgreSQL' },
+            'redis': { port: 6379, name: 'Redis' }
+        };
+
+        // Chart instances
+        let throughputChart, responseTimeChart, memoryChart, errorChart;
+
+        // Initialize charts
+        function initCharts() {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            };
+
+            throughputChart = new Chart(document.getElementById('throughputChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Gateway Requests/sec', data: [], borderColor: '#667eea', backgroundColor: 'rgba(102, 126, 234, 0.1)' },
+                        { label: 'Producer Success/sec', data: [], borderColor: '#48bb78', backgroundColor: 'rgba(72, 187, 120, 0.1)' },
+                        { label: 'Consumer Processed/sec', data: [], borderColor: '#ed8936', backgroundColor: 'rgba(237, 137, 54, 0.1)' }
+                    ]
+                },
+                options: chartOptions
+            });
+
+            responseTimeChart = new Chart(document.getElementById('responseTimeChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Gateway p95', data: [], borderColor: '#667eea', backgroundColor: 'rgba(102, 126, 234, 0.1)' },
+                        { label: 'Producer p95', data: [], borderColor: '#48bb78', backgroundColor: 'rgba(72, 187, 120, 0.1)' },
+                        { label: 'Consumer p95', data: [], borderColor: '#ed8936', backgroundColor: 'rgba(237, 137, 54, 0.1)' }
+                    ]
+                },
+                options: chartOptions
+            });
+
+            memoryChart = new Chart(document.getElementById('memoryChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'API Gateway Heap (MB)', data: [], borderColor: '#667eea', backgroundColor: 'rgba(102, 126, 234, 0.1)' },
+                        { label: 'Producer Heap (MB)', data: [], borderColor: '#48bb78', backgroundColor: 'rgba(72, 187, 120, 0.1)' },
+                        { label: 'Consumer Heap (MB)', data: [], borderColor: '#ed8936', backgroundColor: 'rgba(237, 137, 54, 0.1)' }
+                    ]
+                },
+                options: chartOptions
+            });
+
+            errorChart = new Chart(document.getElementById('errorChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Gateway Error Rate %', data: [], borderColor: '#f56565', backgroundColor: 'rgba(245, 101, 101, 0.1)' },
+                        { label: 'Producer Error Rate %', data: [], borderColor: '#e53e3e', backgroundColor: 'rgba(229, 62, 62, 0.1)' },
+                        { label: 'Consumer Error Rate %', data: [], borderColor: '#c53030', backgroundColor: 'rgba(197, 48, 48, 0.1)' }
+                    ]
+                },
+                options: chartOptions
+            });
+        }
+
+        // Check service health via metrics server
+        async function checkServiceHealth(service, port) {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                const serviceData = data.services[service];
+                if (serviceData) {
+                    return {
+                        status: serviceData.status,
+                        details: serviceData
+                    };
+                }
+                return { status: 'down', error: 'Service not found' };
+            } catch (error) {
+                return { status: 'down', error: error.message };
+            }
+        }
+
+        // Check infrastructure health via metrics server
+        async function checkInfrastructureHealth(service, port) {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                const serviceData = data.infrastructure[service];
+                if (serviceData) {
+                    return {
+                        status: serviceData.status,
+                        details: serviceData
+                    };
+                }
+                return { status: 'down', error: 'Service not found' };
+            } catch (error) {
+                return { status: 'down', error: error.message };
+            }
+        }
+
+        // Get metrics from service via metrics server
+        async function getServiceMetrics(service, port) {
+            try {
+                const response = await fetch('/api/metrics');
+                const data = await response.json();
+                return data.services[service]?.metrics || {};
+            } catch (error) {
+                console.error(`Error fetching metrics from ${service}:`, error);
+                return {};
+            }
+        }
+
+        // Parse Prometheus metrics text
+        function parsePrometheusMetrics(text) {
+            const metrics = {};
+            const lines = text.split('\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('#') || !line.trim()) continue;
+                
+                const match = line.match(/^([a-zA-Z_:][a-zA-Z0-9_:]*)\s+([0-9.-]+)(?:\s+(.*))?$/);
+                if (match) {
+                    const [, name, value, labels] = match;
+                    metrics[name] = parseFloat(value);
+                }
+            }
+            
+            return metrics;
+        }
+
+        // Update service status display
+        async function updateServiceStatus() {
+            const statusContainer = document.getElementById('serviceStatus');
+            statusContainer.innerHTML = '';
+
+            // Check Spring Boot services
+            for (const [key, service] of Object.entries(SERVICES)) {
+                const health = await checkServiceHealth(key, service.port);
+                const statusItem = document.createElement('div');
+                statusItem.className = `status-item ${health.status}`;
+                statusItem.innerHTML = `
+                    <h4>${service.name}</h4>
+                    <div class="value">${health.status.toUpperCase()}</div>
+                `;
+                statusContainer.appendChild(statusItem);
+            }
+
+            // Check infrastructure services
+            for (const [key, service] of Object.entries(INFRASTRUCTURE)) {
+                const health = await checkInfrastructureHealth(key, service.port);
+                const statusItem = document.createElement('div');
+                statusItem.className = `status-item ${health.status}`;
+                statusItem.innerHTML = `
+                    <h4>${service.name}</h4>
+                    <div class="value">${health.status.toUpperCase()}</div>
+                `;
+                statusContainer.appendChild(statusItem);
+            }
+        }
+
+        // Update system metrics
+        async function updateSystemMetrics() {
+            const metricsContainer = document.getElementById('systemMetrics');
+            
+            try {
+                const response = await fetch('/api/aggregated');
+                const data = await response.json();
+                
+                metricsContainer.innerHTML = `
+                    <div class="metric-value">${data.totalRequests.toLocaleString()}</div>
+                    <div class="metric-label">Total Requests</div>
+                    
+                    <div class="metric-value">${data.errorRate.toFixed(2)}%</div>
+                    <div class="metric-label">Error Rate</div>
+                    
+                    <div class="metric-value">${data.avgMemoryUsage.toFixed(0)} MB</div>
+                    <div class="metric-label">Avg Memory Usage</div>
+                `;
+            } catch (error) {
+                console.error('Error fetching aggregated metrics:', error);
+                metricsContainer.innerHTML = `
+                    <div class="error-message">Error loading metrics</div>
+                `;
+            }
+        }
+
+        // Update charts with new data
+        async function updateCharts() {
+            try {
+                const response = await fetch('/api/timeseries');
+                const data = await response.json();
+                
+                // Update throughput chart
+                const throughputLabels = data.throughput.gateway.map(item => 
+                    new Date(item.timestamp).toLocaleTimeString()
+                );
+                throughputChart.data.labels = throughputLabels;
+                throughputChart.data.datasets[0].data = data.throughput.gateway.map(item => item.value);
+                throughputChart.data.datasets[1].data = data.throughput.producer.map(item => item.value);
+                throughputChart.data.datasets[2].data = data.throughput.consumer.map(item => item.value);
+                
+                // Update response time chart
+                const responseLabels = data.responseTime.gateway.map(item => 
+                    new Date(item.timestamp).toLocaleTimeString()
+                );
+                responseTimeChart.data.labels = responseLabels;
+                responseTimeChart.data.datasets[0].data = data.responseTime.gateway.map(item => item.value);
+                responseTimeChart.data.datasets[1].data = data.responseTime.producer.map(item => item.value);
+                responseTimeChart.data.datasets[2].data = data.responseTime.consumer.map(item => item.value);
+                
+                // Update memory chart
+                const memoryLabels = data.memory.gateway.map(item => 
+                    new Date(item.timestamp).toLocaleTimeString()
+                );
+                memoryChart.data.labels = memoryLabels;
+                memoryChart.data.datasets[0].data = data.memory.gateway.map(item => item.value);
+                memoryChart.data.datasets[1].data = data.memory.producer.map(item => item.value);
+                memoryChart.data.datasets[2].data = data.memory.consumer.map(item => item.value);
+                
+                // Update error chart
+                const errorLabels = data.errors.gateway.map(item => 
+                    new Date(item.timestamp).toLocaleTimeString()
+                );
+                errorChart.data.labels = errorLabels;
+                errorChart.data.datasets[0].data = data.errors.gateway.map(item => item.value);
+                errorChart.data.datasets[1].data = data.errors.producer.map(item => item.value);
+                errorChart.data.datasets[2].data = data.errors.consumer.map(item => item.value);
+
+                // Update charts
+                throughputChart.update('none');
+                responseTimeChart.update('none');
+                memoryChart.update('none');
+                errorChart.update('none');
+            } catch (error) {
+                console.error('Error updating charts:', error);
+            }
+        }
+
+        // Main update function
+        async function updateDashboard() {
+            try {
+                await updateServiceStatus();
+                await updateSystemMetrics();
+                await updateCharts();
+                
+                document.getElementById('lastUpdate').textContent = `Last updated: ${new Date().toLocaleString()}`;
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+            }
+        }
+
+        // Initialize dashboard
+        function init() {
+            initCharts();
+            updateDashboard();
+            
+            // Update every 5 seconds
+            setInterval(updateDashboard, 5000);
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
