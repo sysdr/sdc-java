@@ -14,6 +14,6 @@ public class LogEventDto {
     private String level;
     private String message;
     private String source;
-    private Instant timestamp;
+    private String timestamp;
     private String traceId;
 }

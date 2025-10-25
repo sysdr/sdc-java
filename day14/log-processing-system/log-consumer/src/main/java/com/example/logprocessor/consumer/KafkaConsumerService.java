@@ -70,7 +70,7 @@ public class KafkaConsumerService {
                         .level(dto.getLevel())
                         .message(dto.getMessage())
                         .source(dto.getSource())
-                        .timestamp(dto.getTimestamp())
+                        .timestamp(dto.getTimestamp() != null ? Instant.parse(dto.getTimestamp()) : null)
                         .traceId(dto.getTraceId())
                         .processedAt(Instant.now())
                         .build();

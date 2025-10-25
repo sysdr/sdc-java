@@ -21,6 +21,12 @@ management:
     web:
       exposure:
         include: health,metrics,prometheus
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,HEAD"
+        allowed-headers: "*"
+        allow-credentials: false
+        max-age: 3600
   metrics:
     export:
       prometheus:
