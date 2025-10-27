@@ -1,0 +1,181 @@
+version: '3.8'
+
+services:
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - log-network
+
+  # Kafka
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - log-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    hostname: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - log-network
+
+  # PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    hostname: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_DB: logdb
+      POSTGRES_USER: loguser
+      POSTGRES_PASSWORD: logpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loguser -d logdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - log-network
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - log-network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    hostname: grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    networks:
+      - log-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    hostname: api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      log-producer:
+        condition: service_started
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - log-network
+
+  # Log Producer
+  log-producer:
+    build:
+      context: .
+      dockerfile: ./log-producer/Dockerfile
+    hostname: log-producer
+    container_name: log-producer
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - log-network
+
+  # Log Consumer
+  log-consumer:
+    build:
+      context: .
+      dockerfile: ./log-consumer/Dockerfile
+    hostname: log-consumer
+    container_name: log-consumer
+    ports:
+      - "8082:8082"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - log-network
+
+networks:
+  log-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  prometheus-data:
+  grafana-data:

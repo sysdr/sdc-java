@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Log Processing System - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #11998e;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2dfdb 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #11998e;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .card p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .url {
+            background: #11998e;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            text-decoration: none;
+        }
+
+        .url:hover {
+            background: #38ef7d;
+        }
+
+        .architecture {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .flow-box {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .flow-box h4 {
+            margin-bottom: 10px;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #11998e;
+        }
+
+        .api-endpoint {
+            background: #fff;
+            border-left: 4px solid #11998e;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .method {
+            background: #11998e;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .method.get {
+            background: #4caf50;
+        }
+
+        .method.post {
+            background: #ff9800;
+        }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #11998e;
+        }
+
+        .feature h4 {
+            color: #11998e;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status.running {
+            background: #4caf50;
+            color: white;
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .tech-badge {
+            background: #11998e;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 JSON Log Processing System</h1>
+            <p>Distributed Microservices Architecture for High-Performance Log Ingestion</p>
+        </div>
+
+        <div class="content">
+            <!-- System Overview -->
+            <div class="section">
+                <h2 class="section-title">System Overview</h2>
+                <div class="cards">
+                    <div class="card">
+                        <h3>📊 Architecture</h3>
+                        <p>Microservices-based distributed system with async message processing using Kafka, Redis caching, and PostgreSQL persistence.</p>
+                    </div>
+                    <div class="card">
+                        <h3>🎯 Purpose</h3>
+                        <p>Ingest, validate, and process JSON log entries in real-time with schema validation, rate limiting, and resilience patterns.</p>
+                    </div>
+                    <div class="card">
+                        <h3>✨ Features</h3>
+                        <p>Schema validation, circuit breakers, rate limiting, monitoring with Prometheus & Grafana, and high-throughput processing.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="section">
+                <h2 class="section-title">System Architecture</h2>
+                <div class="architecture">
+                    <div class="flow-diagram">
+                        <div class="flow-box">
+                            <h4>Client</h4>
+                            <p>REST API</p>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="flow-box">
+                            <h4>API Gateway</h4>
+                            <p>Spring Cloud<br/>Rate Limiting<br/>Load Balancing</p>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="flow-box">
+                            <h4>Log Producer</h4>
+                            <p>Schema<br/>Validation<br/>Kafka Producer</p>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="flow-box">
+                            <h4>Kafka</h4>
+                            <p>Message<br/>Queue<br/>Streaming</p>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="flow-box">
+                            <h4>Log Consumer</h4>
+                            <p>Event<br/>Processing<br/>Storage</p>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="flow-box">
+                            <h4>PostgreSQL</h4>
+                            <p>Data<br/>Persistence</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Endpoints -->
+            <div class="section">
+                <h2 class="section-title">Service Endpoints</h2>
+                
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-url">http://localhost:8080/api/logs/health</span>
+                    <p>Health check endpoint</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-url">http://localhost:8080/api/logs/ingest</span>
+                    <p>Ingest single log entry with JSON schema validation</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-url">http://localhost:8080/api/logs/ingest/batch</span>
+                    <p>Batch ingestion of multiple log entries</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-url">http://localhost:8080/actuator/health</span>
+                    <p>Spring Boot Actuator health endpoint</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-url">http://localhost:8080/actuator/metrics</span>
+                    <p>Metrics endpoint for monitoring</p>
+                </div>
+            </div>
+
+            <!-- Service URLs -->
+            <div class="section">
+                <h2 class="section-title">Access Points</h2>
+                <div class="cards">
+                    <div class="card">
+                        <h3>🌐 API Gateway</h3>
+                        <p>Main entry point for all API requests</p>
+                        <a href="http://localhost:8080" class="url" target="_blank">http://localhost:8080</a>
+                    </div>
+                    <div class="card">
+                        <h3>📝 Log Producer</h3>
+                        <p>Direct access to log producer service</p>
+                        <a href="http://localhost:8081" class="url" target="_blank">http://localhost:8081</a>
+                    </div>
+                    <div class="card">
+                        <h3>🔄 Log Consumer</h3>
+                        <p>Direct access to log consumer service</p>
+                        <a href="http://localhost:8082" class="url" target="_blank">http://localhost:8082</a>
+                    </div>
+                    <div class="card">
+                        <h3>📊 Prometheus</h3>
+                        <p>Metrics and monitoring dashboard</p>
+                        <a href="http://localhost:9090" class="url" target="_blank">http://localhost:9090</a>
+                    </div>
+                    <div class="card">
+                        <h3>📈 Grafana</h3>
+                        <p>Advanced visualization and dashboards</p>
+                        <p style="margin-top: 10px; color: #777;">Username: admin | Password: admin</p>
+                        <a href="http://localhost:3000" class="url" target="_blank">http://localhost:3000</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="section">
+                <h2 class="section-title">Key Features</h2>
+                <div class="features">
+                    <div class="feature">
+                        <h4>✅ Schema Validation</h4>
+                        <p>JSON schema validation using networknt/json-schema-validator to ensure data integrity.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>⚡ High Throughput</h4>
+                        <p>Supports 1000+ requests per second with Redis-based rate limiting.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>🔄 Async Processing</h4>
+                        <p>Kafka-based asynchronous message processing for scalability.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>🛡️ Resilience</h4>
+                        <p>Built-in retry mechanisms and fault tolerance patterns.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>📊 Monitoring</h4>
+                        <p>Prometheus metrics and Grafana dashboards for observability.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>🚀 Microservices</h4>
+                        <p>Independent, scalable services with Docker containerization.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example Request -->
+            <div class="section">
+                <h2 class="section-title">Example API Request</h2>
+                <div class="architecture">
+                    <h4>POST /api/logs/ingest</h4>
+                    <pre style="background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 10px; overflow-x: auto; margin-top: 15px;">
+curl -X POST http://localhost:8080/api/logs/ingest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "timestamp": "2025-01-27T10:30:00Z",
+    "level": "INFO",
+    "message": "Application started successfully",
+    "service": "user-service",
+    "userId": "12345",
+    "environment": "production"
+}'
+                    </pre>
+                </div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div class="section">
+                <h2 class="section-title">Technology Stack</h2>
+                <div class="tech-stack">
+                    <span class="tech-badge">Java 17</span>
+                    <span class="tech-badge">Spring Boot 3.2</span>
+                    <span class="tech-badge">Spring Cloud Gateway</span>
+                    <span class="tech-badge">Apache Kafka</span>
+                    <span class="tech-badge">Redis</span>
+                    <span class="tech-badge">PostgreSQL</span>
+                    <span class="tech-badge">Docker</span>
+                    <span class="tech-badge">Prometheus</span>
+                    <span class="tech-badge">Grafana</span>
+                    <span class="tech-badge">Maven</span>
+                    <span class="tech-badge">Resilience4j</span>
+                    <span class="tech-badge">Micrometer</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>JSON Log Processing System - Distributed Architecture</p>
+            <p style="margin-top: 10px; opacity: 0.8;">Built with Spring Boot Microservices | Real-time Log Ingestion & Processing</p>
+            <div style="margin-top: 20px;">
+                <span class="status running">System Running</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

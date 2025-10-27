@@ -1,0 +1,68 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: log-producer
+  
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 10
+      enable-idempotence: true
+      compression-type: gzip
+      batch-size: 16384
+      linger-ms: 10
+      max-in-flight-requests-per-connection: 5
+    
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+
+  cache:
+    redis:
+      time-to-live: 3600000  # 1 hour in milliseconds
+      cache-null-values: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+# Resilience4j Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      schemaValidation:
+        register-health-indicator: true
+        sliding-window-size: 100
+        minimum-number-of-calls: 10
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        
+logging:
+  level:
+    com.example.logprocessor: INFO
+    org.springframework.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

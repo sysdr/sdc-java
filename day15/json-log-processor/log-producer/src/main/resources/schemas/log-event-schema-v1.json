@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/log-event-v1.schema.json",
+  "title": "LogEvent",
+  "description": "Schema for structured log events",
+  "type": "object",
+  "required": ["level", "timestamp", "message", "service"],
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
+      "description": "Log severity level"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp"
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10000,
+      "description": "Log message content"
+    },
+    "service": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Service name that generated the log"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional contextual information",
+      "additionalProperties": true
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "description": "Distributed trace ID"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "Span ID within trace"
+    }
+  },
+  "additionalProperties": false
+}
