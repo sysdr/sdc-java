@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "title": "Log Processing Throughput",
+    "panels": [
+      {
+        "title": "Messages Produced per Second",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_send_success_total[1m])"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Messages Consumed per Second",
+        "targets": [
+          {
+            "expr": "rate(log_processed_count_total[1m])"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Processing Latency (p99)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(log_processing_time_bucket[5m]))"
+          }
+        ],
+        "type": "graph"
+      }
+    ]
+  }
+}

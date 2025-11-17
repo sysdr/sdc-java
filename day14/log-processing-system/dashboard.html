@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Processing System - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.up {
+            background: #10b981;
+        }
+
+        .status-dot.down {
+            background: #ef4444;
+        }
+
+        .status-dot.unknown {
+            background: #9ca3af;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 15px 0;
+        }
+
+        .card-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-top: 20px;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .controls h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        input[type="number"] {
+            padding: 10px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+            width: 120px;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .latency-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .latency-item {
+            text-align: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .latency-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 5px 0;
+        }
+
+        .latency-label {
+            color: #666;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Log Processing System Dashboard</h1>
+            <p>Real-time monitoring and metrics for your distributed log processing system</p>
+            <div class="status-bar" id="statusBar">
+                <div class="status-indicator">
+                    <div class="status-dot unknown" id="gatewayStatus"></div>
+                    <span>Gateway (8080)</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot unknown" id="producerStatus"></div>
+                    <span>Producer (8081)</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot unknown" id="consumerStatus"></div>
+                    <span>Consumer (8082)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h2>Load Test Controls</h2>
+            <div class="control-group">
+                <input type="number" id="burstDuration" value="10" min="1" max="300" placeholder="Duration (seconds)">
+                <button class="btn btn-primary" onclick="triggerBurst()">Start Burst Load</button>
+                <button class="btn btn-secondary" onclick="resetStats()">Reset Statistics</button>
+                <button class="btn btn-secondary" onclick="refreshAll()">Refresh Now</button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Throughput Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📈 Throughput</div>
+                </div>
+                <div class="card-value" id="throughputValue">-</div>
+                <div class="card-label">Logs per second</div>
+                <div class="chart-container">
+                    <canvas id="throughputChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Total Logs Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📊 Total Generated</div>
+                </div>
+                <div class="card-value" id="totalLogsValue">-</div>
+                <div class="card-label">Logs processed</div>
+                <div class="metric-row">
+                    <span class="metric-label">Status:</span>
+                    <span class="metric-value" id="generatorStatus">-</span>
+                </div>
+            </div>
+
+            <!-- Latency Card -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <div class="card-title">⏱️ Processing Latency</div>
+                </div>
+                <div class="latency-grid" id="latencyGrid">
+                    <div class="latency-item">
+                        <div class="latency-label">P50 (Median)</div>
+                        <div class="latency-value" id="p50">-</div>
+                        <div class="card-label">ms</div>
+                    </div>
+                    <div class="latency-item">
+                        <div class="latency-label">P95</div>
+                        <div class="latency-value" id="p95">-</div>
+                        <div class="card-label">ms</div>
+                    </div>
+                    <div class="latency-item">
+                        <div class="latency-label">P99</div>
+                        <div class="latency-value" id="p99">-</div>
+                        <div class="card-label">ms</div>
+                    </div>
+                    <div class="latency-item">
+                        <div class="latency-label">P99.9</div>
+                        <div class="latency-value" id="p999">-</div>
+                        <div class="card-label">ms</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- System Metrics Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚙️ System Metrics</div>
+                </div>
+                <div id="systemMetrics">
+                    <div class="loading">Loading metrics...</div>
+                </div>
+            </div>
+
+            <!-- Processing Stats Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🔄 Processing Stats</div>
+                </div>
+                <div id="processingStats">
+                    <div class="loading">Loading stats...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="refresh-indicator" id="refreshIndicator">
+            Last updated: <span id="lastUpdate">Never</span>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = {
+            gateway: 'http://localhost:8080',
+            producer: 'http://localhost:8081',
+            consumer: 'http://localhost:8082'
+        };
+
+        const REFRESH_INTERVAL = 3000; // 3 seconds
+        let refreshTimer = null;
+
+        // Chart instances
+        let throughputChart = null;
+        let latencyChart = null;
+        const throughputData = [];
+        const latencyData = { p50: [], p95: [], p99: [], p999: [] };
+        const maxDataPoints = 30;
+
+        // Initialize charts
+        function initCharts() {
+            const throughputCtx = document.getElementById('throughputChart').getContext('2d');
+            throughputChart = new Chart(throughputCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Throughput (logs/sec)',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+            latencyChart = new Chart(latencyCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'P50',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'P95',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'P99',
+                            data: [],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Latency (ms)' } }
+                    }
+                }
+            });
+        }
+
+        // Update chart data
+        function updateThroughputChart(value) {
+            const now = new Date().toLocaleTimeString();
+            throughputData.push(value);
+            if (throughputData.length > maxDataPoints) {
+                throughputData.shift();
+            }
+            
+            const labels = Array.from({ length: throughputData.length }, (_, i) => '');
+            throughputChart.data.labels = labels;
+            throughputChart.data.datasets[0].data = throughputData;
+            throughputChart.update('none');
+        }
+
+        function updateLatencyChart(p50, p95, p99) {
+            const now = new Date().toLocaleTimeString();
+            latencyData.p50.push(p50);
+            latencyData.p95.push(p95);
+            latencyData.p99.push(p99);
+            
+            Object.keys(latencyData).forEach(key => {
+                if (latencyData[key].length > maxDataPoints) {
+                    latencyData[key].shift();
+                }
+            });
+            
+            const labels = Array.from({ length: latencyData.p50.length }, (_, i) => '');
+            latencyChart.data.labels = labels;
+            latencyChart.data.datasets[0].data = latencyData.p50;
+            latencyChart.data.datasets[1].data = latencyData.p95;
+            latencyChart.data.datasets[2].data = latencyData.p99;
+            latencyChart.update('none');
+        }
+
+        // Check service health
+        async function checkServiceHealth(service, port) {
+            try {
+                const response = await fetch(`${BASE_URL[service]}/actuator/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.status === 'UP';
+                }
+                return false;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Update service status indicators
+        async function updateServiceStatus() {
+            const services = [
+                { name: 'gateway', port: 8080 },
+                { name: 'producer', port: 8081 },
+                { name: 'consumer', port: 8082 }
+            ];
+
+            for (const service of services) {
+                const isUp = await checkServiceHealth(service.name, service.port);
+                const statusDot = document.getElementById(`${service.name}Status`);
+                statusDot.className = `status-dot ${isUp ? 'up' : 'down'}`;
+            }
+        }
+
+        // Fetch producer stats
+        async function fetchProducerStats() {
+            try {
+                const response = await fetch(`${BASE_URL.producer}/api/load/stats`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalLogsValue').textContent = 
+                        formatNumber(data.totalGenerated || 0);
+                    document.getElementById('generatorStatus').textContent = 
+                        data.status || 'unknown';
+                    return data;
+                }
+            } catch (error) {
+                console.error('Error fetching producer stats:', error);
+            }
+            return null;
+        }
+
+        // Fetch metrics summary
+        async function fetchMetricsSummary() {
+            try {
+                const response = await fetch(`${BASE_URL.gateway}/api/metrics/summary`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                }
+            } catch (error) {
+                console.error('Error fetching metrics summary:', error);
+            }
+            return null;
+        }
+
+        // Fetch consumer latency metrics
+        async function fetchLatencyMetrics() {
+            try {
+                const response = await fetch(`${BASE_URL.consumer}/actuator/metrics/log.processing.time`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                }
+            } catch (error) {
+                console.error('Error fetching latency metrics:', error);
+            }
+            return null;
+        }
+
+        // Fetch processed count
+        async function fetchProcessedCount() {
+            try {
+                const response = await fetch(`${BASE_URL.consumer}/actuator/metrics/log.processed.count`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.measurements && data.measurements.length > 0) {
+                        return data.measurements[0].value;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching processed count:', error);
+            }
+            return null;
+        }
+
+        // Parse latency metrics
+        function parseLatencyMetrics(metrics) {
+            const result = { p50: null, p95: null, p99: null, p999: null };
+            
+            if (metrics && metrics.measurements) {
+                metrics.measurements.forEach(measurement => {
+                    const stat = measurement.statistic;
+                    const value = measurement.value;
+                    
+                    if (stat === 'PERCENTILE_50' || stat === 'p50') {
+                        result.p50 = value;
+                    } else if (stat === 'PERCENTILE_95' || stat === 'p95') {
+                        result.p95 = value;
+                    } else if (stat === 'PERCENTILE_99' || stat === 'p99') {
+                        result.p99 = value;
+                    } else if (stat === 'PERCENTILE_999' || stat === 'p999') {
+                        result.p999 = value;
+                    }
+                });
+            }
+            
+            return result;
+        }
+
+        // Update latency display
+        function updateLatencyDisplay(latency) {
+            document.getElementById('p50').textContent = 
+                latency.p50 !== null ? formatNumber(latency.p50 * 1000, 2) : '-';
+            document.getElementById('p95').textContent = 
+                latency.p95 !== null ? formatNumber(latency.p95 * 1000, 2) : '-';
+            document.getElementById('p99').textContent = 
+                latency.p99 !== null ? formatNumber(latency.p99 * 1000, 2) : '-';
+            document.getElementById('p999').textContent = 
+                latency.p999 !== null ? formatNumber(latency.p999 * 1000, 2) : '-';
+            
+            if (latency.p50 !== null && latency.p95 !== null && latency.p99 !== null) {
+                updateLatencyChart(
+                    latency.p50 * 1000,
+                    latency.p95 * 1000,
+                    latency.p99 * 1000
+                );
+            }
+        }
+
+        // Update system metrics
+        function updateSystemMetrics(summary) {
+            const container = document.getElementById('systemMetrics');
+            if (!summary || summary.error) {
+                container.innerHTML = '<div class="error">Unable to fetch system metrics</div>';
+                return;
+            }
+
+            let html = '';
+            if (summary.throughput && summary.throughput.producer) {
+                const producer = summary.throughput.producer;
+                if (producer.measurements) {
+                    producer.measurements.forEach(m => {
+                        html += `<div class="metric-row">
+                            <span class="metric-label">${m.statistic || 'Value'}</span>
+                            <span class="metric-value">${formatNumber(m.value)}</span>
+                        </div>`;
+                    });
+                }
+            }
+            
+            if (html === '') {
+                html = '<div class="metric-row"><span class="metric-label">No metrics available</span></div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Update processing stats
+        async function updateProcessingStats() {
+            const container = document.getElementById('processingStats');
+            const processedCount = await fetchProcessedCount();
+            
+            let html = '';
+            if (processedCount !== null) {
+                html += `<div class="metric-row">
+                    <span class="metric-label">Processed Count</span>
+                    <span class="metric-value">${formatNumber(processedCount)}</span>
+                </div>`;
+            } else {
+                html = '<div class="metric-row"><span class="metric-label">No stats available</span></div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Calculate throughput
+        let lastTotal = 0;
+        let lastTime = Date.now();
+        
+        async function calculateThroughput() {
+            const stats = await fetchProducerStats();
+            if (stats && stats.totalGenerated !== undefined) {
+                const currentTotal = stats.totalGenerated;
+                const currentTime = Date.now();
+                const timeDiff = (currentTime - lastTime) / 1000; // seconds
+                
+                if (timeDiff > 0 && lastTotal > 0) {
+                    const throughput = (currentTotal - lastTotal) / timeDiff;
+                    document.getElementById('throughputValue').textContent = formatNumber(throughput, 0);
+                    updateThroughputChart(throughput);
+                }
+                
+                lastTotal = currentTotal;
+                lastTime = currentTime;
+            }
+        }
+
+        // Main refresh function
+        async function refreshAll() {
+            try {
+                await updateServiceStatus();
+                await calculateThroughput();
+                
+                const latencyMetrics = await fetchLatencyMetrics();
+                if (latencyMetrics) {
+                    const latency = parseLatencyMetrics(latencyMetrics);
+                    updateLatencyDisplay(latency);
+                }
+                
+                const summary = await fetchMetricsSummary();
+                updateSystemMetrics(summary);
+                
+                await updateProcessingStats();
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            }
+        }
+
+        // Trigger burst load
+        async function triggerBurst() {
+            const duration = document.getElementById('burstDuration').value || 10;
+            try {
+                const response = await fetch(
+                    `${BASE_URL.producer}/api/load/burst?durationSeconds=${duration}`,
+                    { method: 'POST' }
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Burst load started: ${data.message || 'Success'}`);
+                } else {
+                    alert('Failed to start burst load');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Reset statistics
+        async function resetStats() {
+            if (!confirm('Are you sure you want to reset all statistics?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(
+                    `${BASE_URL.producer}/api/load/reset`,
+                    { method: 'POST' }
+                );
+                if (response.ok) {
+                    alert('Statistics reset successfully');
+                    lastTotal = 0;
+                    lastTime = Date.now();
+                    refreshAll();
+                } else {
+                    alert('Failed to reset statistics');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Format number
+        function formatNumber(num, decimals = 0) {
+            if (num === null || num === undefined || isNaN(num)) return '-';
+            return Number(num).toLocaleString('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        // Initialize
+        function init() {
+            initCharts();
+            refreshAll();
+            refreshTimer = setInterval(refreshAll, REFRESH_INTERVAL);
+        }
+
+        // Start on page load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
+
