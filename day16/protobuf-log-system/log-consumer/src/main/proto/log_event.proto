@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package com.example.logprocessor;
+
+option java_multiple_files = true;
+option java_package = "com.example.logprocessor.proto";
+
+message LogEvent {
+  string event_id = 1;
+  string timestamp = 2;
+  LogLevel level = 3;
+  string message = 4;
+  string service_name = 5;
+  string host = 10;
+  string environment = 11;
+  map<string, string> tags = 12;
+  string trace_id = 13;
+  string span_id = 14;
+  ExceptionInfo exception = 20;
+  HttpRequestInfo http_request = 21;
+  map<string, string> custom_fields = 22;
+}
+
+enum LogLevel {
+  UNKNOWN = 0;
+  TRACE = 1;
+  DEBUG = 2;
+  INFO = 3;
+  WARN = 4;
+  ERROR = 5;
+  FATAL = 6;
+}
+
+message ExceptionInfo {
+  string exception_class = 1;
+  string exception_message = 2;
+  repeated string stack_trace = 3;
+  ExceptionInfo cause = 4;
+}
+
+message HttpRequestInfo {
+  string method = 1;
+  string path = 2;
+  int32 status_code = 3;
+  int64 duration_ms = 4;
+  string user_agent = 5;
+  string remote_ip = 6;
+}
+
+message LogEventBatch {
+  repeated LogEvent events = 1;
+  string batch_id = 2;
+  int64 batch_timestamp = 3;
+}

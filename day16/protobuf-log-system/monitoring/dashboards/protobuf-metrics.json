@@ -1,0 +1,33 @@
+{
+  "dashboard": {
+    "title": "Protocol Buffers Performance",
+    "panels": [
+      {
+        "title": "Message Throughput",
+        "targets": [
+          {
+            "expr": "rate(log_events_json_total[1m])",
+            "legendFormat": "JSON Messages/sec"
+          },
+          {
+            "expr": "rate(log_events_protobuf_total[1m])",
+            "legendFormat": "Protobuf Messages/sec"
+          }
+        ]
+      },
+      {
+        "title": "Processing Latency",
+        "targets": [
+          {
+            "expr": "log_events_json_processing_seconds",
+            "legendFormat": "JSON Processing Time"
+          },
+          {
+            "expr": "log_events_protobuf_processing_seconds",
+            "legendFormat": "Protobuf Processing Time"
+          }
+        ]
+      }
+    ]
+  }
+}
