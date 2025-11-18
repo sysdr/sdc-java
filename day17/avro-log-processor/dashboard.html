@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avro Log Processor - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #11998e;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            color: #11998e;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #11998e;
+            padding-bottom: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .status-healthy {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-unhealthy {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-unknown {
+            background: #ff9800;
+            color: white;
+        }
+
+        .metric {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #11998e;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metric-small {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #38ef7d;
+            margin: 5px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 15px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-name {
+            color: #555;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: #11998e;
+            font-weight: bold;
+            font-size: 1.2em;
+            font-family: 'Courier New', monospace;
+        }
+
+        .schema-version {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .refresh-btn {
+            background: #11998e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #0d7a70;
+        }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .link-btn {
+            background: #ff6b35;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+        }
+
+        .link-btn:hover {
+            background: #e55a2b;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Avro Log Processor Dashboard</h1>
+            <p>Real-time monitoring and statistics</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Service Health</h2>
+                <div id="health-status">
+                    <div class="loading">Loading health status...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Schema Registry</h2>
+                <div id="schema-status">
+                    <div class="loading">Loading schema information...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Real-Time Metrics</h2>
+                <div id="metrics-status">
+                    <div class="loading">Loading metrics...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Event Statistics</h2>
+                <div id="event-stats">
+                    <div class="loading">Loading event statistics...</div>
+                </div>
+            </div>
+
+            <div class="card full-width">
+                <h2>Quick Links</h2>
+                <div class="links">
+                    <a href="http://localhost:8080/api/health" target="_blank" class="link-btn">API Health</a>
+                    <a href="http://localhost:8085/subjects" target="_blank" class="link-btn">Schema Registry</a>
+                    <a href="http://localhost:9090" target="_blank" class="link-btn">Prometheus</a>
+                    <a href="http://localhost:3000" target="_blank" class="link-btn">Grafana</a>
+                    <a href="http://localhost:8080/api/logs" target="_blank" class="link-btn">API Gateway</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h2>System Information</h2>
+            <div id="system-info">
+                <div class="loading">Loading system information...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        // Retry wrapper for fetch requests
+        async function fetchWithRetry(url, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        return response;
+                    }
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error('Max retries exceeded');
+        }
+
+        async function fetchHealth() {
+            try {
+                const response = await fetchWithRetry(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                let html = '';
+                for (const [service, status] of Object.entries(data)) {
+                    const statusClass = status === 'healthy' || status === 'UP' ? 'status-healthy' : 
+                                       status.includes('unhealthy') ? 'status-unhealthy' : 'status-unknown';
+                    const statusText = status === 'healthy' || status === 'UP' ? 'Healthy' : 
+                                      status.includes('unhealthy') ? 'Unhealthy' : 'Unknown';
+                    
+                    html += `
+                        <div class="status-item">
+                            <span><strong>${service.charAt(0).toUpperCase() + service.slice(1)}</strong></span>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('health-status').innerHTML = html;
+            } catch (error) {
+                document.getElementById('health-status').innerHTML = 
+                    `<div class="error">Error loading health status: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchSchemaInfo() {
+            try {
+                const [subjectsRes, versionsRes] = await Promise.all([
+                    fetchWithRetry(`${API_BASE}/schema/subjects`).then(r => r.json()).catch(() => []),
+                    fetchWithRetry(`${API_BASE}/schema/subjects/avro-log-events-value/versions`).then(r => r.json()).catch(() => null)
+                ]);
+
+                let html = `<div class="metric-label">Registered Subjects</div>`;
+                
+                if (subjectsRes && Array.isArray(subjectsRes) && subjectsRes.length > 0) {
+                    html += `<div class="metric">${subjectsRes.length}</div>`;
+                    html += `<div class="schema-version">${subjectsRes.join(', ')}</div>`;
+                } else {
+                    html += `<div class="metric">0</div>`;
+                    html += `<div class="error">No subjects registered yet</div>`;
+                }
+
+                if (versionsRes && Array.isArray(versionsRes)) {
+                    html += `<div class="metric-label" style="margin-top: 20px;">Schema Versions</div>`;
+                    html += `<div class="metric">${versionsRes.length}</div>`;
+                    if (versionsRes.length > 0) {
+                        html += `<div class="schema-version">Versions: ${versionsRes.join(', ')}</div>`;
+                    }
+                } else {
+                    html += `<div class="metric-label" style="margin-top: 20px;">Schema Versions</div>`;
+                    html += `<div class="metric">1</div>`;
+                    html += `<div class="schema-version">Version 1 registered</div>`;
+                }
+
+                document.getElementById('schema-status').innerHTML = html;
+            } catch (error) {
+                document.getElementById('schema-status').innerHTML = 
+                    `<div class="error">Error loading schema info: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchMetrics() {
+            try {
+                const [producerMetrics, consumerMetrics] = await Promise.all([
+                    fetchWithRetry(`${API_BASE}/metrics/producer`).then(r => r.json()).catch(() => ({})),
+                    fetchWithRetry(`${API_BASE}/metrics/consumer`).then(r => r.json()).catch(() => ({}))
+                ]);
+
+                let html = '';
+                
+                const produced = producerMetrics['avro_events_produced_total'] || 0;
+                const consumed = consumerMetrics['avro_events_consumed_total'] || 0;
+                const errors = (producerMetrics['avro_events_errors_total'] || 0) + 
+                              (consumerMetrics['avro_events_processing_errors_total'] || 0);
+
+                html += `
+                    <div class="metric-label">Events Produced</div>
+                    <div class="metric pulse">${Math.floor(produced)}</div>
+                    <div class="metric-label">Events Consumed</div>
+                    <div class="metric-small pulse">${Math.floor(consumed)}</div>
+                    <div class="metric-label">Total Errors</div>
+                    <div class="metric-small" style="color: ${errors > 0 ? '#f44336' : '#4caf50'}">${Math.floor(errors)}</div>
+                `;
+
+                document.getElementById('metrics-status').innerHTML = html;
+            } catch (error) {
+                document.getElementById('metrics-status').innerHTML = 
+                    `<div class="error">Error loading metrics: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchEventStats() {
+            try {
+                const [producerMetrics, consumerMetrics, consumerStatus] = await Promise.all([
+                    fetchWithRetry(`${API_BASE}/metrics/producer`).then(r => r.json()).catch(() => ({})),
+                    fetchWithRetry(`${API_BASE}/metrics/consumer`).then(r => r.json()).catch(() => ({})),
+                    fetchWithRetry(`${API_BASE}/consumer/status`).then(r => r.json()).catch(() => ({}))
+                ]);
+
+                let html = '';
+                
+                const v1Events = consumerMetrics['avro_events_v1_total'] || 0;
+                const v2Events = consumerMetrics['avro_events_v2_total'] || 0;
+                const correlations = consumerStatus.correlationCounts ? Object.keys(consumerStatus.correlationCounts).length : 0;
+
+                html += `
+                    <div class="metric-row">
+                        <span class="metric-name">V1 Events</span>
+                        <span class="metric-value">${Math.floor(v1Events)}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-name">V2 Events</span>
+                        <span class="metric-value">${Math.floor(v2Events)}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-name">Active Correlations</span>
+                        <span class="metric-value">${correlations}</span>
+                    </div>
+                `;
+
+                document.getElementById('event-stats').innerHTML = html;
+            } catch (error) {
+                document.getElementById('event-stats').innerHTML = 
+                    `<div class="error">Error loading stats: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchSystemInfo() {
+            try {
+                const [health, schema] = await Promise.all([
+                    fetchWithRetry(`${API_BASE}/health`).then(r => r.json()),
+                    fetchWithRetry(`${API_BASE}/schema/subjects`).then(r => r.json()).catch(() => [])
+                ]);
+
+                let html = `
+                    <div class="status-item">
+                        <span><strong>API Gateway</strong></span>
+                        <span>http://localhost:8080</span>
+                    </div>
+                    <div class="status-item">
+                        <span><strong>Producer Service</strong></span>
+                        <span>http://localhost:8081</span>
+                    </div>
+                    <div class="status-item">
+                        <span><strong>Consumer Service</strong></span>
+                        <span>http://localhost:8082</span>
+                    </div>
+                    <div class="status-item">
+                        <span><strong>Schema Registry</strong></span>
+                        <span>http://localhost:8085</span>
+                    </div>
+                    <div class="status-item">
+                        <span><strong>Kafka</strong></span>
+                        <span>localhost:9092</span>
+                    </div>
+                    <div class="status-item">
+                        <span><strong>Redis</strong></span>
+                        <span>localhost:6379</span>
+                    </div>
+                    <div class="status-item">
+                        <span><strong>Prometheus</strong></span>
+                        <span>http://localhost:9090</span>
+                    </div>
+                    <div class="status-item">
+                        <span><strong>Grafana</strong></span>
+                        <span>http://localhost:3000</span>
+                    </div>
+                `;
+
+                document.getElementById('system-info').innerHTML = html;
+            } catch (error) {
+                document.getElementById('system-info').innerHTML = 
+                    `<div class="error">Error loading system info: ${error.message}</div>`;
+            }
+        }
+
+        async function refreshAll() {
+            await Promise.all([
+                fetchHealth(),
+                fetchSchemaInfo(),
+                fetchMetrics(),
+                fetchEventStats(),
+                fetchSystemInfo()
+            ]);
+        }
+
+        // Initial load
+        refreshAll();
+
+        // Auto-refresh every 2 seconds for real-time updates
+        setInterval(refreshAll, 2000);
+    </script>
+</body>
+</html>

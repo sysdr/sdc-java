@@ -1,0 +1,96 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "title": "Avro Log Processing Metrics",
+  "uid": "avro-log-metrics",
+  "version": 1,
+  "panels": [
+    {
+      "title": "Events Produced (Total)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "avro_events_produced_total",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Events Consumed (Total)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "avro_events_consumed_total",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "V1 vs V2 Events",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "avro_events_v1_total",
+          "legendFormat": "V1 Events",
+          "refId": "A"
+        },
+        {
+          "expr": "avro_events_v2_total",
+          "legendFormat": "V2 Events",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Production Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "expr": "rate(avro_events_produced_total[1m])",
+          "legendFormat": "Events/sec",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Processing Latency",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "rate(avro_processing_time_seconds_sum[1m]) / rate(avro_processing_time_seconds_count[1m])",
+          "legendFormat": "Avg Latency",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Errors",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "rate(avro_events_errors_total[1m])",
+          "legendFormat": "Production Errors",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(avro_events_processing_errors_total[1m])",
+          "legendFormat": "Processing Errors",
+          "refId": "B"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "5s"
+}

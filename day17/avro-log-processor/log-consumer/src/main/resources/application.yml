@@ -1,0 +1,51 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: avro-log-consumer
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: avro-log-consumers
+    properties:
+      schema:
+        registry:
+          url: http://localhost:8085
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+kafka:
+  topic:
+    logs: avro-log-events
+
+# Resilience4j configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      redisOperations:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    com.example.logprocessor: DEBUG
+    org.apache.kafka: INFO

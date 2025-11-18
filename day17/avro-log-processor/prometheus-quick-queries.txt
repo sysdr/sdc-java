@@ -1,0 +1,47 @@
+# Quick Prometheus Queries - Copy & Paste into http://localhost:9090
+
+## BASIC METRICS
+
+# Total Events Produced
+avro_events_produced_total{application="avro-log-producer"}
+
+# Total Events Consumed
+avro_events_consumed_total{application="avro-log-consumer"}
+
+# Events Produced Per Second
+rate(avro_events_produced_total{application="avro-log-producer"}[5m])
+
+# Events Consumed Per Second
+rate(avro_events_consumed_total{application="avro-log-consumer"}[5m])
+
+# V1 Events Count
+avro_events_v1_total{application="avro-log-consumer"}
+
+# V2 Events Count
+avro_events_v2_total{application="avro-log-consumer"}
+
+# Total Errors (Production)
+avro_events_errors_total{application="avro-log-producer"}
+
+# Total Errors (Processing)
+avro_events_processing_errors_total{application="avro-log-consumer"}
+
+## PERFORMANCE
+
+# Average Production Time
+rate(avro_production_time_seconds_sum{application="avro-log-producer"}[5m]) / rate(avro_production_time_seconds_count{application="avro-log-producer"}[5m])
+
+# Average Processing Time
+rate(avro_processing_time_seconds_sum{application="avro-log-consumer"}[5m]) / rate(avro_processing_time_seconds_count{application="avro-log-consumer"}[5m])
+
+## TRENDS
+
+# Events Produced in Last Hour
+increase(avro_events_produced_total{application="avro-log-producer"}[1h])
+
+# Events Consumed in Last Hour
+increase(avro_events_consumed_total{application="avro-log-consumer"}[1h])
+
+# Error Rate Percentage
+(rate(avro_events_errors_total{application="avro-log-producer"}[5m]) / rate(avro_events_produced_total{application="avro-log-producer"}[5m])) * 100
+

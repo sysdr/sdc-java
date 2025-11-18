@@ -1,0 +1,43 @@
+{
+  "type": "record",
+  "name": "LogEventV1",
+  "namespace": "com.example.logprocessor.avro",
+  "doc": "Log event schema version 1 - baseline schema",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "Unique event identifier"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "doc": "Event timestamp in milliseconds since epoch"
+    },
+    {
+      "name": "level",
+      "type": {
+        "type": "enum",
+        "name": "LogLevel",
+        "symbols": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
+      },
+      "doc": "Log severity level"
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "doc": "Log message content"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "doc": "Service or component that generated the log"
+    },
+    {
+      "name": "schemaVersion",
+      "type": "int",
+      "default": 1,
+      "doc": "Schema version for debugging"
+    }
+  ]
+}

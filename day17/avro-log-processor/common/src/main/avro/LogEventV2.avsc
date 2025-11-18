@@ -1,0 +1,70 @@
+{
+  "type": "record",
+  "name": "LogEventV2",
+  "namespace": "com.example.logprocessor.avro",
+  "doc": "Log event schema version 2 - added tracing and metadata support",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "Unique event identifier"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "doc": "Event timestamp in milliseconds since epoch"
+    },
+    {
+      "name": "level",
+      "type": {
+        "type": "enum",
+        "name": "LogLevel",
+        "symbols": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
+      },
+      "doc": "Log severity level"
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "doc": "Log message content"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "doc": "Service or component that generated the log"
+    },
+    {
+      "name": "schemaVersion",
+      "type": "int",
+      "default": 2,
+      "doc": "Schema version for debugging"
+    },
+    {
+      "name": "correlationId",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Correlation ID for distributed tracing"
+    },
+    {
+      "name": "tags",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "default": {},
+      "doc": "Flexible key-value metadata tags"
+    },
+    {
+      "name": "spanId",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Span ID for trace context"
+    },
+    {
+      "name": "parentSpanId",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Parent span ID for trace hierarchy"
+    }
+  ]
+}
