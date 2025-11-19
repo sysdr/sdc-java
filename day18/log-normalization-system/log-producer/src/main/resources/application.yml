@@ -1,0 +1,26 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: log-producer
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+      acks: all
+      retries: 3
+
+app:
+  kafka:
+    topic: raw-logs
+  producer:
+    enabled: false
+    rate-ms: 100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

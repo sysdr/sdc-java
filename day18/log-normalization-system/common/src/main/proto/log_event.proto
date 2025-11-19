@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.example.logprocessor;
+
+option java_package = "com.example.logprocessor.common.proto";
+option java_outer_classname = "LogEventProtos";
+
+message LogEvent {
+    string id = 1;
+    int64 timestamp = 2;
+    string level = 3;
+    string service = 4;
+    string host = 5;
+    string message = 6;
+    string trace_id = 7;
+    string span_id = 8;
+    map<string, string> metadata = 9;
+}
+
+message LogBatch {
+    repeated LogEvent events = 1;
+}

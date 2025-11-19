@@ -1,0 +1,47 @@
+{
+  "dashboard": {
+    "title": "Log Normalization Metrics",
+    "panels": [
+      {
+        "title": "Normalization Success Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(normalization_success_total[5m])) / (sum(rate(normalization_success_total[5m])) + sum(rate(normalization_failure_total[5m]))) * 100"
+          }
+        ]
+      },
+      {
+        "title": "Conversions by Format Pair",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(normalization_success_total[1m])) by (source, target)"
+          }
+        ]
+      },
+      {
+        "title": "Conversion Duration (p95)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(normalization_duration_seconds_bucket[5m])) by (le, source, target))"
+          }
+        ]
+      },
+      {
+        "title": "Format Detection Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(normalization_success_total) by (source)"
+          }
+        ]
+      }
+    ]
+  }
+}

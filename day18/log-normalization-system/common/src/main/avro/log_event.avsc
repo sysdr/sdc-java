@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "LogEvent",
+  "namespace": "com.example.logprocessor.common.avro",
+  "fields": [
+    {"name": "id", "type": "string"},
+    {"name": "timestamp", "type": "long"},
+    {"name": "level", "type": "string"},
+    {"name": "service", "type": "string"},
+    {"name": "host", "type": "string"},
+    {"name": "message", "type": "string"},
+    {"name": "traceId", "type": ["null", "string"], "default": null},
+    {"name": "spanId", "type": ["null", "string"], "default": null},
+    {"name": "metadata", "type": {"type": "map", "values": "string"}, "default": {}}
+  ]
+}

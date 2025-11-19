@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+app:
+  services:
+    normalizer-url: ${NORMALIZER_URL:http://localhost:8081}
+    producer-url: ${PRODUCER_URL:http://localhost:8082}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      normalizer:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+      producer:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'normalizer-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['normalizer-service:8081']
+
+  - job_name: 'log-producer'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['log-producer:8082']
+
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8080']

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Normalization System - Operations Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #e4e4e7;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #f9fafb;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #a1a1aa;
+            font-size: 14px;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f9fafb;
+        }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #10b981;
+            margin: 16px 0;
+        }
+
+        .card-value.warning {
+            color: #f59e0b;
+        }
+
+        .card-value.error {
+            color: #ef4444;
+        }
+
+        .card-footer {
+            font-size: 12px;
+            color: #a1a1aa;
+            margin-top: 12px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #a1a1aa;
+            font-size: 14px;
+        }
+
+        .metric-value {
+            color: #f9fafb;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #14b8a6);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f59e0b, #f97316);
+        }
+
+        .progress-fill.error {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 16px;
+            position: relative;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #10b981;
+        }
+
+        .service-card.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .service-card.error {
+            border-left-color: #ef4444;
+        }
+
+        .service-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #f9fafb;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .refresh-btn:hover {
+            opacity: 0.9;
+        }
+
+        .refresh-btn:active {
+            opacity: 0.7;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #a1a1aa;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        .format-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #10b981;
+            margin: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Log Normalization System</h1>
+        <p>Real-time Operations Dashboard</p>
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>System Operational</span>
+            </div>
+            <div class="status-item">
+                <span>Last Updated: <span id="lastUpdate">--</span></span>
+            </div>
+            <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Request Rate</div>
+            </div>
+            <div class="card-value" id="requestRate">0</div>
+            <div class="card-footer">Requests per second</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Success Rate</div>
+            </div>
+            <div class="card-value" id="successRate">0%</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="successProgress" style="width: 0%"></div>
+            </div>
+            <div class="card-footer">Normalization success percentage</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Total Conversions</div>
+            </div>
+            <div class="card-value" id="totalConversions">0</div>
+            <div class="card-footer">Last hour</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Error Rate</div>
+            </div>
+            <div class="card-value error" id="errorRate">0</div>
+            <div class="card-footer">Errors per second</div>
+        </div>
+    </div>
+
+    <div class="service-grid">
+        <div class="service-card" id="apiGatewayCard">
+            <div class="service-name">API Gateway</div>
+            <div class="metric-row">
+                <span class="metric-label">Status</span>
+                <span class="metric-value" id="apiGatewayStatus">Checking...</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Port</span>
+                <span class="metric-value">8080</span>
+            </div>
+        </div>
+
+        <div class="service-card" id="normalizerCard">
+            <div class="service-name">Normalizer Service</div>
+            <div class="metric-row">
+                <span class="metric-label">Status</span>
+                <span class="metric-value" id="normalizerStatus">Checking...</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Port</span>
+                <span class="metric-value">8081</span>
+            </div>
+        </div>
+
+        <div class="service-card" id="producerCard">
+            <div class="service-name">Log Producer</div>
+            <div class="metric-row">
+                <span class="metric-label">Status</span>
+                <span class="metric-value" id="producerStatus">Checking...</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Port</span>
+                <span class="metric-value">8082</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Format Conversions</div>
+        </div>
+        <div id="formatConversions">
+            <div class="loading">Loading format data...</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">System Health</div>
+        </div>
+        <div id="systemHealth">
+            <div class="loading">Loading health data...</div>
+        </div>
+    </div>
+
+    <script>
+        const SERVICES = {
+            apiGateway: { url: 'http://localhost:8080', name: 'API Gateway' },
+            normalizer: { url: 'http://localhost:8081', name: 'Normalizer Service' },
+            producer: { url: 'http://localhost:8082', name: 'Log Producer' }
+        };
+
+        // Use proxy endpoints to avoid CORS issues
+        const PROXY_BASE = window.location.origin;
+        const PROMETHEUS_URL = `${PROXY_BASE}/api/prometheus`;
+
+        async function queryPrometheus(query) {
+            try {
+                const response = await fetch(`${PROMETHEUS_URL}?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                // Check if there's an error in the response
+                if (data.status === 'error') {
+                    console.warn('Prometheus query error:', data.error);
+                    return 0;
+                }
+                
+                if (data.status === 'success' && data.data && data.data.result && data.data.result.length > 0) {
+                    return parseFloat(data.data.result[0].value[1]);
+                }
+                return 0;
+            } catch (error) {
+                console.error('Prometheus query error:', error);
+                return 0;
+            }
+        }
+
+        async function checkServiceHealth(serviceKey) {
+            try {
+                const response = await fetch(`${PROXY_BASE}/api/health/${serviceKey}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.status === 'UP' ? 'UP' : 'DOWN';
+                }
+                return 'DOWN';
+            } catch (error) {
+                return 'DOWN';
+            }
+        }
+
+        async function loadDashboard() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+
+            // Check service health - only show UP services
+            for (const [key, service] of Object.entries(SERVICES)) {
+                const status = await checkServiceHealth(key === 'apiGateway' ? 'api-gateway' : key);
+                const statusElement = document.getElementById(`${key}Status`);
+                const cardElement = document.getElementById(`${key}Card`);
+                
+                // Hide DOWN services
+                if (cardElement) {
+                    if (status === 'UP') {
+                        cardElement.style.display = 'block';
+                        cardElement.className = 'service-card';
+                        if (statusElement) {
+                            statusElement.textContent = status;
+                            statusElement.style.color = '#10b981';
+                        }
+                    } else {
+                        cardElement.style.display = 'none';
+                    }
+                }
+            }
+
+            // Load metrics from Prometheus
+            try {
+                // Request rate
+                const requestRate = await queryPrometheus('sum(rate(http_server_requests_seconds_count[5m]))');
+                document.getElementById('requestRate').textContent = requestRate.toFixed(2);
+
+                // Success rate - use total counts for more accurate calculation
+                const successCount = await queryPrometheus('sum(normalization_success_total)');
+                const failureCount = await queryPrometheus('sum(normalization_failure_total)');
+                const totalCount = successCount + failureCount;
+                
+                // If we have data, calculate success rate; otherwise try rate-based calculation
+                let successRate = 0;
+                if (totalCount > 0) {
+                    successRate = (successCount / totalCount * 100);
+                } else {
+                    // Fallback to rate-based if no total counts yet
+                    const successRateValue = await queryPrometheus('sum(rate(normalization_success_total[5m]))');
+                    const failureRateValue = await queryPrometheus('sum(rate(normalization_failure_total[5m]))');
+                    const totalRate = successRateValue + failureRateValue;
+                    successRate = totalRate > 0 ? (successRateValue / totalRate * 100) : 100; // Default to 100% if no failures
+                }
+                
+                // Ensure success rate is at least 0 and at most 100
+                successRate = Math.max(0, Math.min(100, successRate));
+                
+                document.getElementById('successRate').textContent = successRate.toFixed(1) + '%';
+                const progressBar = document.getElementById('successProgress');
+                progressBar.style.width = successRate + '%';
+                progressBar.className = successRate >= 95 ? 'progress-fill' : 
+                                      successRate >= 80 ? 'progress-fill warning' : 'progress-fill error';
+
+                // Total conversions
+                const conversions = await queryPrometheus('sum(increase(normalization_success_total[1h]))');
+                document.getElementById('totalConversions').textContent = Math.round(conversions);
+
+                // Error rate
+                const errorRate = await queryPrometheus('sum(rate(normalization_failure_total[5m]))');
+                document.getElementById('errorRate').textContent = errorRate.toFixed(2);
+
+                // Format conversions
+                await loadFormatConversions();
+
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                document.getElementById('formatConversions').innerHTML = 
+                    '<div class="error-message">Unable to load metrics. Ensure Prometheus is running on port 9090.</div>';
+            }
+
+            // Load system health
+            await loadSystemHealth();
+        }
+
+        async function loadFormatConversions() {
+            try {
+                // Use query without spaces in 'by' clause for better compatibility
+                const response = await fetch(`${PROXY_BASE}/api/prometheus?query=${encodeURIComponent('sum(normalization_success_total) by (source,target)')}`);
+                const data = await response.json();
+                
+                // Check for errors
+                if (data.status === 'error') {
+                    document.getElementById('formatConversions').innerHTML = 
+                        `<div class="error-message">Unable to load format conversions: ${data.error || 'Unknown error'}</div>`;
+                    return;
+                }
+                
+                if (data.status === 'success' && data.data && data.data.result && data.data.result.length > 0) {
+                    let html = '';
+                    // Sort by value descending
+                    const sorted = data.data.result.sort((a, b) => parseFloat(b.value[1]) - parseFloat(a.value[1]));
+                    sorted.forEach(result => {
+                        const source = result.metric.source || 'Unknown';
+                        const target = result.metric.target || 'Unknown';
+                        const value = parseFloat(result.value[1]);
+                        if (value > 0) {
+                            html += `
+                                <div class="metric-row">
+                                    <span class="metric-label">
+                                        <span class="format-badge">${source}</span> → 
+                                        <span class="format-badge">${target}</span>
+                                    </span>
+                                    <span class="metric-value">${Math.round(value)}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    document.getElementById('formatConversions').innerHTML = html || '<div class="loading">No conversion data available</div>';
+                } else {
+                    // Try alternative query without tags
+                    const altResponse = await fetch(`${PROXY_BASE}/api/prometheus?query=${encodeURIComponent('normalization_success_total')}`);
+                    const altData = await altResponse.json();
+                    if (altData.status === 'success' && altData.data && altData.data.result && altData.data.result.length > 0) {
+                        let html = '<div class="metric-row"><span class="metric-label">Total Conversions</span><span class="metric-value">';
+                        const total = altData.data.result.reduce((sum, r) => sum + parseFloat(r.value[1]), 0);
+                        html += Math.round(total) + '</span></div>';
+                        document.getElementById('formatConversions').innerHTML = html;
+                    } else {
+                        document.getElementById('formatConversions').innerHTML = '<div class="loading">Waiting for conversion data...</div>';
+                    }
+                }
+            } catch (error) {
+                document.getElementById('formatConversions').innerHTML = 
+                    '<div class="error-message">Unable to load format conversions</div>';
+            }
+        }
+
+        async function loadSystemHealth() {
+            let html = '';
+            
+            // Check each service - only show UP services
+            for (const [key, service] of Object.entries(SERVICES)) {
+                const serviceKey = key === 'apiGateway' ? 'api-gateway' : key;
+                const status = await checkServiceHealth(serviceKey);
+                // Only add UP services to the list
+                if (status === 'UP') {
+                    html += `
+                        <div class="metric-row">
+                            <span class="metric-label">${service.name}</span>
+                            <span class="metric-value" style="color: #10b981">${status}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            // Add Prometheus status
+            try {
+                const promResponse = await fetch(`${PROXY_BASE}/api/prometheus/health`);
+                const promData = await promResponse.json();
+                const promStatus = promData.status === 'UP' ? 'UP' : 'DOWN';
+                const promColor = promStatus === 'UP' ? '#10b981' : '#ef4444';
+                html += `
+                    <div class="metric-row">
+                        <span class="metric-label">Prometheus</span>
+                        <span class="metric-value" style="color: ${promColor}">${promStatus}</span>
+                    </div>
+                `;
+            } catch (error) {
+                html += `
+                    <div class="metric-row">
+                        <span class="metric-label">Prometheus</span>
+                        <span class="metric-value" style="color: #ef4444">DOWN</span>
+                    </div>
+                `;
+            }
+
+            document.getElementById('systemHealth').innerHTML = html;
+        }
+
+        // Initial load
+        loadDashboard();
+
+        // Auto-refresh every 10 seconds
+        setInterval(loadDashboard, 10000);
+    </script>
+</body>
+</html>
+
