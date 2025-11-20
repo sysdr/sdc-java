@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: validation-gateway
+
+server:
+  port: 8082
+
+schema:
+  registry:
+    url: http://localhost:8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      schemaClient:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30000
+  retry:
+    instances:
+      schemaClient:
+        maxAttempts: 3
+        waitDuration: 500ms
+
+logging:
+  level:
+    com.example: INFO
