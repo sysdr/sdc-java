@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Enrichment System - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid #3a3a3a;
+        }
+
+        .header h1 {
+            color: #00d4aa;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #b0b0b0;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            flex: 1;
+            min-width: 200px;
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00d4aa;
+        }
+
+        .status-item.down {
+            border-left-color: #ff4444;
+        }
+
+        .status-item.warning {
+            border-left-color: #ffaa00;
+        }
+
+        .status-item h3 {
+            color: #00d4aa;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-item .value {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #3a3a3a;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 170, 0.2);
+        }
+
+        .metric-card h3 {
+            color: #00d4aa;
+            font-size: 1em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .metric-unit {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #3a3a3a;
+        }
+
+        .chart-container h3 {
+            color: #00d4aa;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .error {
+            background: #3a1f1f;
+            color: #ff6666;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ff4444;
+            margin: 10px 0;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2a2a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+            font-size: 0.9em;
+            color: #00d4aa;
+        }
+
+        .refresh-indicator .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00d4aa;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .operations-section {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #3a3a3a;
+        }
+
+        .operations-section h3 {
+            color: #00d4aa;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .operation-item {
+            background: #1f1f1f;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #00d4aa;
+        }
+
+        .operation-item h4 {
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .operation-item p {
+            color: #888;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Log Enrichment System Dashboard</h1>
+            <p>Real-time monitoring and operational insights</p>
+            <div class="status-bar" id="statusBar">
+                <div class="status-item">
+                    <h3>System Status</h3>
+                    <div class="value" id="systemStatus">Loading...</div>
+                </div>
+                <div class="status-item">
+                    <h3>Last Update</h3>
+                    <div class="value" id="lastUpdate">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="refresh-indicator">
+            <span class="dot"></span> Live Updates
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Throughput</h3>
+                <div class="metric-value" id="throughput">--</div>
+                <div class="metric-unit">logs/min</div>
+            </div>
+            <div class="metric-card">
+                <h3>Success Rate</h3>
+                <div class="metric-value" id="successRate">--</div>
+                <div class="metric-unit">%</div>
+            </div>
+            <div class="metric-card">
+                <h3>P99 Latency</h3>
+                <div class="metric-value" id="latency">--</div>
+                <div class="metric-unit">seconds</div>
+            </div>
+            <div class="metric-card">
+                <h3>Coverage</h3>
+                <div class="metric-value" id="coverage">--</div>
+                <div class="metric-unit">%</div>
+            </div>
+        </div>
+
+        <div class="operations-section">
+            <h3>System Operations</h3>
+            <div class="operations-grid">
+                <div class="operation-item">
+                    <h4>📥 Log Ingestion</h4>
+                    <p>Raw logs are received via REST API and published to Kafka raw-logs topic</p>
+                </div>
+                <div class="operation-item">
+                    <h4>🔄 Real-time Enrichment</h4>
+                    <p>Kafka Streams processes logs through multi-stage enrichment pipeline</p>
+                </div>
+                <div class="operation-item">
+                    <h4>💾 Metadata Resolution</h4>
+                    <p>Multi-tier lookup: Redis cache → PostgreSQL database with fallback</p>
+                </div>
+                <div class="operation-item">
+                    <h4>🛡️ Circuit Breakers</h4>
+                    <p>Resilience4j protects against cascading failures in external dependencies</p>
+                </div>
+                <div class="operation-item">
+                    <h4>📤 Output Topics</h4>
+                    <p>Enriched logs routed to complete or partial topics based on enrichment status</p>
+                </div>
+                <div class="operation-item">
+                    <h4>📈 Metrics Collection</h4>
+                    <p>Micrometer exposes metrics to Prometheus for real-time monitoring</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container full-width">
+            <h3>Throughput Trend (Last 5 Minutes)</h3>
+            <div class="chart-wrapper">
+                <canvas id="throughputChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container full-width">
+            <h3>Success Rate Trend (Last 5 Minutes)</h3>
+            <div class="chart-wrapper">
+                <canvas id="successRateChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container full-width">
+            <h3>Latency Trend (Last 5 Minutes)</h3>
+            <div class="chart-wrapper">
+                <canvas id="latencyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container full-width">
+            <h3>Coverage Trend (Last 5 Minutes)</h3>
+            <div class="chart-wrapper">
+                <canvas id="coverageChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        const UPDATE_INTERVAL = 5000; // 5 seconds
+
+        // Chart configurations with professional colors (no purple/blue)
+        const chartConfig = {
+            type: 'line',
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#888' },
+                        grid: { color: '#3a3a3a' }
+                    },
+                    y: {
+                        ticks: { color: '#888' },
+                        grid: { color: '#3a3a3a' }
+                    }
+                }
+            }
+        };
+
+        // Initialize charts
+        const throughputChart = new Chart(document.getElementById('throughputChart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Throughput',
+                    data: [],
+                    borderColor: '#00d4aa',
+                    backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+        const successRateChart = new Chart(document.getElementById('successRateChart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Success Rate',
+                    data: [],
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+        const latencyChart = new Chart(document.getElementById('latencyChart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'P99 Latency',
+                    data: [],
+                    borderColor: '#ffaa00',
+                    backgroundColor: 'rgba(255, 170, 0, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+        const coverageChart = new Chart(document.getElementById('coverageChart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Coverage',
+                    data: [],
+                    borderColor: '#ff6b6b',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+        function formatValue(value, unit) {
+            if (!value || value === 'null' || value === 'undefined') return '--';
+            const num = parseFloat(value);
+            if (isNaN(num)) return '--';
+            if (unit === '%') return num.toFixed(1);
+            if (unit === 'seconds') return num.toFixed(3);
+            return Math.round(num).toLocaleString();
+        }
+
+        function updateMetricCard(id, value, unit) {
+            const element = document.getElementById(id);
+            if (element) {
+                const formatted = formatValue(value, unit);
+                element.textContent = formatted;
+            } else {
+                console.warn(`Element with id '${id}' not found`);
+            }
+        }
+
+        function updateServiceStatus(services) {
+            const statusBar = document.getElementById('statusBar');
+            if (!statusBar) return;
+            
+            // Clear only service status items, preserve system status and last update
+            const systemStatusItem = statusBar.querySelector('#systemStatus')?.closest('.status-item');
+            const lastUpdateItem = statusBar.querySelector('#lastUpdate')?.closest('.status-item');
+            
+            // Remove all items except system status and last update
+            const itemsToRemove = Array.from(statusBar.children).filter(item => 
+                item !== systemStatusItem && item !== lastUpdateItem
+            );
+            itemsToRemove.forEach(item => item.remove());
+            
+            let allUp = true;
+            for (const [name, health] of Object.entries(services)) {
+                const status = health.status || 'UNKNOWN';
+                const isUp = status === 'UP';
+                if (!isUp) allUp = false;
+                
+                const statusItem = document.createElement('div');
+                statusItem.className = `status-item ${isUp ? '' : 'down'}`;
+                statusItem.innerHTML = `
+                    <h3>${name}</h3>
+                    <div class="value">${status}</div>
+                `;
+                // Insert before last update item
+                if (lastUpdateItem) {
+                    statusBar.insertBefore(statusItem, lastUpdateItem);
+                } else {
+                    statusBar.appendChild(statusItem);
+                }
+            }
+            
+            const systemStatus = document.getElementById('systemStatus');
+            if (systemStatus) {
+                const statusText = allUp ? 'OPERATIONAL' : 'DEGRADED';
+                systemStatus.textContent = statusText;
+                systemStatus.style.color = allUp ? '#00d4aa' : '#ff4444';
+                
+                // Update the status item border color
+                const statusItem = systemStatus.closest('.status-item');
+                if (statusItem) {
+                    if (allUp) {
+                        statusItem.classList.remove('down', 'warning');
+                        statusItem.style.borderLeftColor = '#00d4aa';
+                    } else {
+                        statusItem.classList.add('down');
+                        statusItem.style.borderLeftColor = '#ff4444';
+                    }
+                }
+            }
+        }
+
+        function updateCharts() {
+            const now = new Date();
+            const timeLabels = [];
+            for (let i = 19; i >= 0; i--) {
+                const time = new Date(now - i * 15 * 1000);
+                timeLabels.push(time.toLocaleTimeString());
+            }
+
+            ['throughput', 'success-rate', 'latency', 'coverage'].forEach((metric, index) => {
+                fetch(`${API_BASE}/metrics/timeseries?metric=${metric}&seconds=300`)
+                    .then(r => {
+                        if (!r.ok) {
+                            throw new Error(`HTTP error! status: ${r.status}`);
+                        }
+                        return r.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            console.warn(`Error in ${metric} data:`, data.error);
+                            return;
+                        }
+                        
+                        const chart = [throughputChart, successRateChart, latencyChart, coverageChart][index];
+                        if (!chart) return;
+                        
+                        const values = new Array(20).fill(null);
+                        
+                        if (data.data && Array.isArray(data.data)) {
+                            data.data.forEach(point => {
+                                if (point.timestamp && point.value !== undefined) {
+                                    const age = Math.floor((now - point.timestamp * 1000) / (15 * 1000));
+                                    if (age >= 0 && age < 20) {
+                                        values[19 - age] = point.value;
+                                    }
+                                }
+                            });
+                        }
+                        
+                        chart.data.labels = timeLabels;
+                        chart.data.datasets[0].data = values;
+                        chart.update('none');
+                    })
+                    .catch(err => {
+                        console.warn(`Error fetching ${metric}:`, err);
+                        // Don't break the whole update cycle
+                    });
+            });
+        }
+
+        function updateMetrics() {
+            fetch(`${API_BASE}/stats/summary`)
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error(`HTTP error! status: ${r.status}`);
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error fetching summary:', data.error);
+                        return;
+                    }
+                    
+                    updateMetricCard('throughput', data.throughput, 'logs/min');
+                    updateMetricCard('successRate', data.successRate, '%');
+                    updateMetricCard('latency', data.latencyP99, 'seconds');
+                    updateMetricCard('coverage', data.coverage ? (parseFloat(data.coverage) * 100).toFixed(1) : null, '%');
+                    
+                    if (data.services) {
+                        updateServiceStatus(data.services);
+                    }
+                    
+                    const lastUpdate = document.getElementById('lastUpdate');
+                    if (lastUpdate) {
+                        lastUpdate.textContent = new Date().toLocaleTimeString();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching summary:', err);
+                    // Show error in UI
+                    const systemStatus = document.getElementById('systemStatus');
+                    if (systemStatus) {
+                        systemStatus.textContent = 'ERROR';
+                        systemStatus.style.color = '#ff4444';
+                    }
+                });
+        }
+
+        // Initial load
+        updateMetrics();
+        updateCharts();
+
+        // Periodic updates
+        setInterval(() => {
+            updateMetrics();
+            updateCharts();
+        }, UPDATE_INTERVAL);
+    </script>
+</body>
+</html>
+
