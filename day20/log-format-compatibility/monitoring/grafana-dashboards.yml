@@ -1,0 +1,21 @@
+apiVersion: 1
+
+providers:
+  - name: 'Log Processing Metrics'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+
+# Key Metrics to Monitor:
+# - syslog_messages_produced_total: Total syslog messages ingested
+# - journald_messages_produced_total: Total journald messages ingested
+# - normalizer_events_processed_total: Total normalized events
+# - normalizer_errors_total: Normalization failures
+# - syslog_producer_errors_total: Syslog producer errors
+# - jvm_memory_used_bytes: Memory usage by service
+# - kafka_consumer_lag: Consumer lag by topic

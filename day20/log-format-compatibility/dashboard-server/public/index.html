@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Format Compatibility Layer - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Log Format Compatibility Layer</h1>
+            <p class="subtitle">Multi-Protocol Log Ingestion and Normalization System</p>
+        </header>
+
+        <!-- System Overview -->
+        <section class="section">
+            <h2>System Architecture</h2>
+            <div class="architecture-grid">
+                <div class="arch-card">
+                    <h3>Syslog Adapter</h3>
+                    <p>Port: 8081</p>
+                    <p>UDP:514, TCP:601</p>
+                    <p>RFC 3164/5424 parsing</p>
+                    <span class="status-badge" id="status-syslog">Checking...</span>
+                </div>
+                <div class="arch-card">
+                    <h3>Journald Adapter</h3>
+                    <p>Port: 8082</p>
+                    <p>Systemd journal polling</p>
+                    <p>Redis cursor storage</p>
+                    <span class="status-badge" id="status-journald">Checking...</span>
+                </div>
+                <div class="arch-card">
+                    <h3>Format Normalizer</h3>
+                    <p>Port: 8083</p>
+                    <p>Schema normalization</p>
+                    <p>Event validation</p>
+                    <span class="status-badge" id="status-normalizer">Checking...</span>
+                </div>
+                <div class="arch-card">
+                    <h3>API Gateway</h3>
+                    <p>Port: 8080</p>
+                    <p>REST API & caching</p>
+                    <p>Query interface</p>
+                    <span class="status-badge" id="status-gateway">Checking...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistics Cards -->
+        <section class="section">
+            <h2>System Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Logs Processed</h3>
+                    <div class="stat-value" id="stat-total">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Syslog Messages</h3>
+                    <div class="stat-value" id="stat-syslog">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Journald Messages</h3>
+                    <div class="stat-value" id="stat-journald">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Normalized Events</h3>
+                    <div class="stat-value" id="stat-normalized">-</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metrics Charts -->
+        <section class="section">
+            <h2>Real-Time Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Message Ingestion Rate</h3>
+                    <canvas id="ingestionChart"></canvas>
+                </div>
+                <div class="metric-card">
+                    <h3>Normalization Rate</h3>
+                    <canvas id="normalizationChart"></canvas>
+                </div>
+                <div class="metric-card">
+                    <h3>Error Rate</h3>
+                    <canvas id="errorChart"></canvas>
+                </div>
+                <div class="metric-card">
+                    <h3>Memory Usage</h3>
+                    <canvas id="memoryChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Prometheus & Grafana Integration -->
+        <section class="section">
+            <h2>Monitoring Dashboards</h2>
+            <div class="monitoring-tabs">
+                <button class="tab-button active" onclick="showTab('prometheus')">Prometheus</button>
+                <button class="tab-button" onclick="showTab('grafana')">Grafana</button>
+            </div>
+            <div id="prometheus-tab" class="tab-content active">
+                <div class="prometheus-container">
+                    <div class="query-panel">
+                        <h3>Prometheus Query</h3>
+                        <div class="query-input-group">
+                            <input type="text" id="prometheus-query" 
+                                   placeholder="e.g., rate(syslog_messages_produced_total[5m])"
+                                   value="rate(syslog_messages_produced_total[5m])">
+                            <button onclick="executePrometheusQuery()">Execute</button>
+                        </div>
+                        <div class="query-results" id="prometheus-results"></div>
+                    </div>
+                    <div class="iframe-container">
+                        <iframe src="http://localhost:9090" frameborder="0" class="monitoring-iframe"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div id="grafana-tab" class="tab-content">
+                <div class="iframe-container">
+                    <iframe src="http://localhost:3000" frameborder="0" class="monitoring-iframe" id="grafana-iframe" onerror="handleGrafanaError()"></iframe>
+                    <div id="grafana-fallback" style="display: none; text-align: center; padding: 40px;">
+                        <p style="margin-bottom: 20px; color: #666;">Grafana cannot be embedded. Click below to open in a new window:</p>
+                        <a href="http://localhost:3000" target="_blank" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Open Grafana</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Log Query Interface -->
+        <section class="section">
+            <h2>Log Query Interface</h2>
+            <div class="query-interface">
+                <div class="query-filters">
+                    <div class="filter-group">
+                        <label>Level:</label>
+                        <select id="filter-level">
+                            <option value="">All</option>
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="INFO">INFO</option>
+                            <option value="WARN">WARN</option>
+                            <option value="ERROR">ERROR</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                            <option value="FATAL">FATAL</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Source:</label>
+                        <select id="filter-source">
+                            <option value="">All</option>
+                            <option value="syslog">Syslog</option>
+                            <option value="journald">Journald</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Hostname:</label>
+                        <input type="text" id="filter-hostname" placeholder="Optional">
+                    </div>
+                    <div class="filter-group">
+                        <label>Limit:</label>
+                        <input type="number" id="filter-limit" value="50" min="1" max="1000">
+                    </div>
+                    <button class="query-button" onclick="queryLogs()">Query Logs</button>
+                </div>
+                <div class="logs-container">
+                    <div class="logs-header">
+                        <h3>Query Results</h3>
+                        <span id="logs-count">0 logs</span>
+                    </div>
+                    <div class="logs-table-container">
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Level</th>
+                                    <th>Source</th>
+                                    <th>Hostname</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-tbody">
+                                <tr>
+                                    <td colspan="5" class="no-logs">Click "Query Logs" to search</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kafka Topics -->
+        <section class="section">
+            <h2>Kafka Topics</h2>
+            <div class="kafka-topics" id="kafka-topics">
+                <p>Loading topics...</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
+

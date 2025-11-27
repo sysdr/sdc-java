@@ -1,0 +1,27 @@
+{
+  "name": "log-format-compatibility-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard server for Log Format Compatibility Layer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "dashboard",
+    "monitoring",
+    "logs"
+  ],
+  "author": "",
+  "license": "ISC"
+}
+
