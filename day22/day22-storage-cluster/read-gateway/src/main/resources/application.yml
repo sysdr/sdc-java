@@ -1,0 +1,29 @@
+server:
+  port: 9091
+
+spring:
+  application:
+    name: read-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+coordinator:
+  url: ${COORDINATOR_URL:http://cluster-coordinator:8080}
+
+read:
+  quorum: 2
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  health:
+    redis:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true

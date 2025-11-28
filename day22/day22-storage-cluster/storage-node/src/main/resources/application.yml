@@ -1,0 +1,32 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: storage-node
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+storage:
+  node-id: ${NODE_ID:node-1}
+  rocksdb:
+    path: ${ROCKSDB_PATH:./data/rocksdb-node-1}
+  replication:
+    factor: 3
+    write-quorum: 2
+    timeout-ms: 5000
+  heartbeat:
+    interval-ms: 1000
+    ttl-seconds: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

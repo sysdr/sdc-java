@@ -1,0 +1,180 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  cluster-coordinator:
+    build:
+      context: .
+      dockerfile: cluster-coordinator/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  storage-node-1:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - NODE_ID=node-1
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKSDB_PATH=/data/rocksdb-node-1
+    volumes:
+      - node1-data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  storage-node-2:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SERVER_PORT=8082
+      - NODE_ID=node-2
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKSDB_PATH=/data/rocksdb-node-2
+    volumes:
+      - node2-data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  storage-node-3:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SERVER_PORT=8083
+      - NODE_ID=node-3
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKSDB_PATH=/data/rocksdb-node-3
+    volumes:
+      - node3-data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  write-gateway:
+    build:
+      context: .
+      dockerfile: write-gateway/Dockerfile
+    ports:
+      - "9090:9090"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - COORDINATOR_URL=http://cluster-coordinator:8080
+    depends_on:
+      cluster-coordinator:
+        condition: service_healthy
+
+  read-gateway:
+    build:
+      context: .
+      dockerfile: read-gateway/Dockerfile
+    ports:
+      - "9091:9091"
+    environment:
+      - COORDINATOR_URL=http://cluster-coordinator:8080
+    depends_on:
+      cluster-coordinator:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9092:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+    depends_on:
+      - prometheus
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      - COORDINATOR_URL=http://cluster-coordinator:8080
+      - WRITE_GATEWAY_URL=http://write-gateway:9090
+      - READ_GATEWAY_URL=http://read-gateway:9091
+      - PROMETHEUS_URL=http://prometheus:9090
+      - NODE1_URL=http://storage-node-1:8081
+      - NODE2_URL=http://storage-node-2:8082
+      - NODE3_URL=http://storage-node-3:8083
+    depends_on:
+      - cluster-coordinator
+      - write-gateway
+      - read-gateway
+      - prometheus
+      - storage-node-1
+      - storage-node-2
+      - storage-node-3
+
+volumes:
+  redis-data:
+  node1-data:
+  node2-data:
+  node3-data:
+  prometheus-data:
+  grafana-data:

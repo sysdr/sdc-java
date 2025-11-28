@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Cluster Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Storage Cluster Dashboard</h1>
+            <p class="subtitle">Multi-Node Storage Cluster with Replication & Monitoring</p>
+        </header>
+
+        <!-- System Status Overview -->
+        <section class="status-section">
+            <h2>System Status</h2>
+            <div class="status-grid" id="statusGrid">
+                <div class="status-card">
+                    <div class="status-icon">🎯</div>
+                    <div class="status-info">
+                        <h3>Coordinator</h3>
+                        <span class="status-badge" id="coordinatorStatus">Checking...</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">💾</div>
+                    <div class="status-info">
+                        <h3>Node 1</h3>
+                        <span class="status-badge" id="node1Status">Checking...</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">💾</div>
+                    <div class="status-info">
+                        <h3>Node 2</h3>
+                        <span class="status-badge" id="node2Status">Checking...</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">💾</div>
+                    <div class="status-info">
+                        <h3>Node 3</h3>
+                        <span class="status-badge" id="node3Status">Checking...</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">✍️</div>
+                    <div class="status-info">
+                        <h3>Write Gateway</h3>
+                        <span class="status-badge" id="writeGatewayStatus">Checking...</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">📖</div>
+                    <div class="status-info">
+                        <h3>Read Gateway</h3>
+                        <span class="status-badge" id="readGatewayStatus">Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cluster Topology -->
+        <section class="topology-section">
+            <h2>Cluster Topology</h2>
+            <div class="topology-container">
+                <div class="topology-info" id="topologyInfo">
+                    <p>Loading topology...</p>
+                </div>
+                <div class="topology-visual" id="topologyVisual"></div>
+            </div>
+        </section>
+
+        <!-- Operations Panel -->
+        <section class="operations-section">
+            <h2>Cluster Operations</h2>
+            <div class="operations-grid">
+                <div class="operation-card">
+                    <h3>Write Operation</h3>
+                    <div class="operation-form">
+                        <input type="text" id="writeKey" placeholder="Key (e.g., user-123)" />
+                        <textarea id="writeContent" placeholder="Content"></textarea>
+                        <button onclick="performWrite()" class="btn-primary">Write</button>
+                    </div>
+                    <div class="operation-result" id="writeResult"></div>
+                </div>
+                <div class="operation-card">
+                    <h3>Read Operation</h3>
+                    <div class="operation-form">
+                        <input type="text" id="readKey" placeholder="Key to read" />
+                        <button onclick="performRead()" class="btn-primary">Read</button>
+                    </div>
+                    <div class="operation-result" id="readResult"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metrics & Graphs -->
+        <section class="metrics-section">
+            <h2>Metrics & Monitoring</h2>
+            
+            <div class="metrics-controls">
+                <div class="query-panel">
+                    <h3>Prometheus Query</h3>
+                    <div class="query-input-group">
+                        <input type="text" id="prometheusQuery" 
+                               placeholder="e.g., storage_replication_success_total" 
+                               value="storage_replication_success_total" />
+                        <button onclick="executeQuery()" class="btn-secondary">Query</button>
+                    </div>
+                    <div class="query-result" id="queryResult"></div>
+                </div>
+                
+                <div class="quick-metrics">
+                    <h3>Quick Metrics</h3>
+                    <div class="quick-metrics-grid">
+                        <button onclick="loadMetric('storage_replication_success_total')" class="btn-metric">
+                            Replication Success
+                        </button>
+                        <button onclick="loadMetric('storage_replication_failure_total')" class="btn-metric">
+                            Replication Failures
+                        </button>
+                        <button onclick="loadMetric('storage_replication_latency_seconds')" class="btn-metric">
+                            Replication Latency
+                        </button>
+                        <button onclick="loadMetric('gateway_write_success_total')" class="btn-metric">
+                            Write Success
+                        </button>
+                        <button onclick="loadMetric('gateway_read_success_total')" class="btn-metric">
+                            Read Success
+                        </button>
+                        <button onclick="loadMetric('cluster_nodes_total')" class="btn-metric">
+                            Active Nodes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Replication Metrics</h3>
+                    <canvas id="replicationChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Gateway Operations</h3>
+                    <canvas id="gatewayChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Latency Metrics</h3>
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
