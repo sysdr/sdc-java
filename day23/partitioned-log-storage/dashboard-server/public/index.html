@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partitioned Log Storage Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2d5016 0%, #1a2d0a 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #a8e063;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            color: #c0c0c0;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4a9b23;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .status-item.down {
+            border-left-color: #d32f2f;
+        }
+
+        .status-item.warning {
+            border-left-color: #ff9800;
+        }
+
+        .status-label {
+            font-size: 0.85em;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .status-value.up {
+            color: #4a9b23;
+        }
+
+        .status-value.down {
+            color: #d32f2f;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(168, 224, 99, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            color: #a8e063;
+            font-weight: 600;
+        }
+
+        .card-content {
+            min-height: 200px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 10px;
+        }
+
+        .query-panel {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a8e063;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #a8e063;
+            box-shadow: 0 0 0 3px rgba(168, 224, 99, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4a9b23 0%, #3a7a1a 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(74, 155, 35, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #5ab82d 0%, #4a9b23 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 155, 35, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .results-table th {
+            background: rgba(168, 224, 99, 0.1);
+            padding: 12px;
+            text-align: left;
+            color: #a8e063;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(168, 224, 99, 0.3);
+        }
+
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .results-table tr:hover {
+            background: rgba(168, 224, 99, 0.05);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge.error {
+            background: rgba(211, 47, 47, 0.2);
+            color: #ff6b6b;
+        }
+
+        .badge.warn {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ffa726;
+        }
+
+        .badge.info {
+            background: rgba(74, 155, 35, 0.2);
+            color: #a8e063;
+        }
+
+        .badge.debug {
+            background: rgba(158, 158, 158, 0.2);
+            color: #bdbdbd;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(168, 224, 99, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #a8e063;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .error-message {
+            background: rgba(211, 47, 47, 0.1);
+            border: 1px solid rgba(211, 47, 47, 0.3);
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Partitioned Log Storage System</h1>
+            <p class="subtitle">Real-time monitoring and querying dashboard for distributed log processing</p>
+            <div class="status-bar" id="statusBar">
+                <div class="status-item">
+                    <div class="status-label">System Status</div>
+                    <div class="status-value" id="systemStatus">Checking...</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Metrics Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📈 Logs Produced Rate</div>
+                    <button class="refresh-btn" onclick="loadMetrics()">Refresh</button>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="producedChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">💾 Logs Written Rate</div>
+                    <button class="refresh-btn" onclick="loadMetrics()">Refresh</button>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="writtenChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚡ Query Duration (p99)</div>
+                    <button class="refresh-btn" onclick="loadMetrics()">Refresh</button>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container" style="position: relative;">
+                        <canvas id="queryDurationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🗂️ Partition Statistics</div>
+                    <button class="refresh-btn" onclick="loadPartitionStats()">Refresh</button>
+                </div>
+                <div class="card-content">
+                    <div id="partitionStats" class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Interface -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-header">
+                <div class="card-title">🔍 Log Query Interface</div>
+            </div>
+            <div class="card-content">
+                <div class="query-panel">
+                    <form id="queryForm" onsubmit="queryLogs(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Start Time</label>
+                                <input type="datetime-local" id="startTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label>End Time</label>
+                                <input type="datetime-local" id="endTime" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Source (optional)</label>
+                                <input type="text" id="source" placeholder="e.g., payment-service">
+                            </div>
+                            <div class="form-group">
+                                <label>Log Level (optional)</label>
+                                <select id="level">
+                                    <option value="">All Levels</option>
+                                    <option value="ERROR">ERROR</option>
+                                    <option value="WARN">WARN</option>
+                                    <option value="INFO">INFO</option>
+                                    <option value="DEBUG">DEBUG</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Limit</label>
+                            <input type="number" id="limit" value="100" min="1" max="10000">
+                        </div>
+                        <button type="submit">Query Logs</button>
+                    </form>
+                </div>
+                <div id="queryResults"></div>
+            </div>
+        </div>
+
+        <!-- Operations Overview -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-header">
+                <div class="card-title">⚙️ System Operations</div>
+                <button class="refresh-btn" onclick="loadOperations()">Refresh</button>
+            </div>
+            <div class="card-content">
+                <div id="operationsContent" class="loading">Loading operations...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const chartConfig = {
+            type: 'line',
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#e0e0e0' }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#999' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    y: {
+                        ticks: { color: '#999' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        beginAtZero: true
+                    }
+                }
+            }
+        };
+
+        const producedChart = new Chart(document.getElementById('producedChart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Logs/sec',
+                    data: [],
+                    borderColor: '#4a9b23',
+                    backgroundColor: 'rgba(74, 155, 35, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+        const writtenChart = new Chart(document.getElementById('writtenChart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Logs/sec',
+                    data: [],
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+        const queryDurationChart = new Chart(document.getElementById('queryDurationChart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Duration (ms)',
+                    data: [],
+                    borderColor: '#d32f2f',
+                    backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+        // Set default time range (last hour)
+        function setDefaultTimes() {
+            const now = new Date();
+            const oneHourAgo = new Date(now.getTime() - 3600000);
+            
+            document.getElementById('endTime').value = now.toISOString().slice(0, 16);
+            document.getElementById('startTime').value = oneHourAgo.toISOString().slice(0, 16);
+        }
+
+        // Load metrics
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/api/metrics/dashboard');
+                const data = await response.json();
+
+                let hasProducedData = false;
+                let hasWrittenData = false;
+                let hasQueryData = false;
+
+                // Update produced chart
+                if (data.logsProduced?.data?.result?.[0]?.values && data.logsProduced.data.result[0].values.length > 0) {
+                    const values = data.logsProduced.data.result[0].values;
+                    producedChart.data.labels = values.map(v => new Date(v[0] * 1000).toLocaleTimeString());
+                    producedChart.data.datasets[0].data = values.map(v => parseFloat(v[1]) || 0);
+                    producedChart.update('none');
+                    hasProducedData = true;
+                } else {
+                    // Show empty state
+                    producedChart.data.labels = [];
+                    producedChart.data.datasets[0].data = [];
+                    producedChart.update('none');
+                }
+
+                // Update written chart
+                if (data.logsWritten?.data?.result?.[0]?.values && data.logsWritten.data.result[0].values.length > 0) {
+                    const values = data.logsWritten.data.result[0].values;
+                    writtenChart.data.labels = values.map(v => new Date(v[0] * 1000).toLocaleTimeString());
+                    writtenChart.data.datasets[0].data = values.map(v => parseFloat(v[1]) || 0);
+                    writtenChart.update('none');
+                    hasWrittenData = true;
+                } else {
+                    // Show empty state
+                    writtenChart.data.labels = [];
+                    writtenChart.data.datasets[0].data = [];
+                    writtenChart.update('none');
+                }
+
+                // Update query duration chart
+                if (data.queryDuration?.data?.result?.[0]?.values && data.queryDuration.data.result[0].values.length > 0) {
+                    const values = data.queryDuration.data.result[0].values;
+                    queryDurationChart.data.labels = values.map(v => new Date(v[0] * 1000).toLocaleTimeString());
+                    queryDurationChart.data.datasets[0].data = values.map(v => parseFloat(v[1]) * 1000 || 0);
+                    queryDurationChart.update('none');
+                    hasQueryData = true;
+                } else {
+                    // Show empty state
+                    queryDurationChart.data.labels = [];
+                    queryDurationChart.data.datasets[0].data = [];
+                    queryDurationChart.update('none');
+                }
+
+                // Show helpful messages if no data
+                showMetricEmptyState('producedChart', hasProducedData, 'Log Producer service is not running. Start it to see metrics.');
+                showMetricEmptyState('writtenChart', hasWrittenData, 'Log Consumer service is not running. Start it to see metrics.');
+                showMetricEmptyState('queryDurationChart', hasQueryData, 'No queries executed yet. Query logs to see duration metrics.');
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        // Show empty state message for metrics
+        function showMetricEmptyState(chartId, hasData, message) {
+            const chartContainer = document.getElementById(chartId).parentElement;
+            let emptyStateDiv = chartContainer.querySelector('.empty-state-message');
+            
+            if (!hasData) {
+                if (!emptyStateDiv) {
+                    emptyStateDiv = document.createElement('div');
+                    emptyStateDiv.className = 'empty-state-message';
+                    emptyStateDiv.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #999; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 8px; z-index: 10;';
+                    emptyStateDiv.innerHTML = `
+                        <div style="font-size: 2em; margin-bottom: 10px;">📊</div>
+                        <div style="font-size: 0.9em; max-width: 250px;">${message}</div>
+                    `;
+                    chartContainer.style.position = 'relative';
+                    chartContainer.appendChild(emptyStateDiv);
+                }
+            } else {
+                if (emptyStateDiv) {
+                    emptyStateDiv.remove();
+                }
+            }
+        }
+
+        // Load partition stats
+        async function loadPartitionStats() {
+            const container = document.getElementById('partitionStats');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const response = await fetch('/api/partitions/stats');
+                const data = await response.json();
+
+                // Check if response is an error
+                if (!response.ok) {
+                    if (data.code === 'DATABASE_UNAVAILABLE') {
+                        container.innerHTML = `
+                            <div class="error-message" style="padding: 20px;">
+                                <h3 style="color: #ff6b6b; margin-bottom: 10px;">⚠️ Database Unavailable</h3>
+                                <p style="margin-bottom: 15px;">${data.message || data.error}</p>
+                                <p style="color: #999; font-size: 0.9em;">
+                                    The PostgreSQL database is not running. Start it with:
+                                </p>
+                                <code style="display: block; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; margin-top: 10px;">
+                                    docker compose up -d postgres
+                                </code>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div class="error-message">
+                                <h3 style="color: #ff6b6b; margin-bottom: 10px;">Error Loading Partition Stats</h3>
+                                <p>${data.message || data.error || 'Unknown error'}</p>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Total Partitions</div>
+                            <div class="stat-value">${data.totalPartitions || 0}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Total Logs</div>
+                            <div class="stat-value">${(data.totalLogs || 0).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    ${data.topPartitions?.length > 0 ? `
+                        <h3 style="margin-top: 20px; color: #a8e063;">Top Partitions by Size</h3>
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Partition Name</th>
+                                    <th>Size</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.topPartitions.slice(0, 10).map(p => `
+                                    <tr>
+                                        <td>${p.tablename}</td>
+                                        <td>${p.size}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : data.totalPartitions === 0 ? `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); border-radius: 6px; color: #ffa726;">
+                            <p>No partitions found. Partitions will be created automatically when logs are ingested.</p>
+                        </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error-message">
+                        <h3 style="color: #ff6b6b; margin-bottom: 10px;">Network Error</h3>
+                        <p>Failed to load partition stats: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Query logs
+        async function queryLogs(event) {
+            event.preventDefault();
+            const resultsDiv = document.getElementById('queryResults');
+            resultsDiv.innerHTML = '<div class="loading">Querying...</div>';
+
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const source = document.getElementById('source').value;
+            const level = document.getElementById('level').value;
+            const limit = document.getElementById('limit').value;
+
+            const query = {
+                startTime: startTime + ':00',
+                endTime: endTime + ':00',
+                limit: parseInt(limit)
+            };
+
+            if (source) query.source = source;
+            if (level) query.level = level;
+
+            try {
+                const response = await fetch('/api/query/logs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(query)
+                });
+
+                const data = await response.json();
+
+                // Check if response is an error
+                if (!response.ok) {
+                    if (data.code === 'SERVICE_UNAVAILABLE') {
+                        resultsDiv.innerHTML = `
+                            <div class="error-message" style="padding: 20px;">
+                                <h3 style="color: #ff6b6b; margin-bottom: 10px;">⚠️ Query Service Unavailable</h3>
+                                <p style="margin-bottom: 15px;">${data.message || data.error}</p>
+                                <p style="color: #999; font-size: 0.9em; margin-bottom: 10px;">
+                                    <strong>To start the Query Service:</strong>
+                                </p>
+                                <code style="display: block; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                                    java -jar query-service/target/query-service-1.0.0.jar
+                                </code>
+                                <p style="color: #999; font-size: 0.9em;">
+                                    The Query Service should be running on port 8084. Check the system status above to see all service states.
+                                </p>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="error-message">
+                                <h3 style="color: #ff6b6b; margin-bottom: 10px;">Error Querying Logs</h3>
+                                <p>${data.message || data.error || 'Unknown error occurred'}</p>
+                                ${data.details ? `<p style="color: #999; font-size: 0.9em; margin-top: 10px;">${data.details}</p>` : ''}
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+
+                // Check if results is an array (successful response)
+                if (!Array.isArray(data)) {
+                    resultsDiv.innerHTML = `<div class="error-message">Unexpected response format from Query Service</div>`;
+                    return;
+                }
+
+                const results = data;
+
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = '<div class="loading">No logs found for the specified criteria.</div>';
+                    return;
+                }
+
+                resultsDiv.innerHTML = `
+                    <h3 style="margin-top: 20px; color: #a8e063;">Query Results (${results.length} logs)</h3>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Source</th>
+                                <th>Level</th>
+                                <th>Message</th>
+                                <th>Trace ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${results.map(log => `
+                                <tr>
+                                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                                    <td>${log.source || 'N/A'}</td>
+                                    <td><span class="badge ${(log.level || '').toLowerCase()}">${log.level || 'N/A'}</span></td>
+                                    <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis;">${log.message || 'N/A'}</td>
+                                    <td style="font-family: monospace; font-size: 0.9em;">${log.traceId || 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error-message">
+                        <h3 style="color: #ff6b6b; margin-bottom: 10px;">Network Error</h3>
+                        <p>Failed to connect to the dashboard server: ${error.message}</p>
+                        <p style="color: #999; font-size: 0.9em; margin-top: 10px;">
+                            Please check that the dashboard server is running.
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load system health
+        async function loadHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+
+                const statusBar = document.getElementById('statusBar');
+                const services = data.services || {};
+
+                statusBar.innerHTML = `
+                    <div class="status-item ${services.queryService?.status === 'up' ? '' : 'down'}">
+                        <div class="status-label">Query Service</div>
+                        <div class="status-value ${services.queryService?.status === 'up' ? 'up' : 'down'}">
+                            ${services.queryService?.status === 'up' ? '✓ Online' : '✗ Offline'}
+                        </div>
+                    </div>
+                    <div class="status-item ${services.producerService?.status === 'up' ? '' : 'down'}">
+                        <div class="status-label">Producer Service</div>
+                        <div class="status-value ${services.producerService?.status === 'up' ? 'up' : 'down'}">
+                            ${services.producerService?.status === 'up' ? '✓ Online' : '✗ Offline'}
+                        </div>
+                    </div>
+                    <div class="status-item ${services.database?.status === 'up' ? '' : 'down'}">
+                        <div class="status-label">Database</div>
+                        <div class="status-value ${services.database?.status === 'up' ? 'up' : 'down'}">
+                            ${services.database?.status === 'up' ? '✓ Online' : '✗ Offline'}
+                        </div>
+                    </div>
+                    <div class="status-item ${services.prometheus?.status === 'up' ? '' : 'down'}">
+                        <div class="status-label">Prometheus</div>
+                        <div class="status-value ${services.prometheus?.status === 'up' ? 'up' : 'down'}">
+                            ${services.prometheus?.status === 'up' ? '✓ Online' : '✗ Offline'}
+                        </div>
+                    </div>
+                `;
+
+                const allUp = Object.values(services).every(s => s.status === 'up');
+                const systemStatusEl = document.getElementById('systemStatus');
+                if (systemStatusEl) {
+                    systemStatusEl.textContent = allUp ? '✓ All Systems Operational' : '⚠ Some Services Down';
+                    systemStatusEl.className = allUp ? 'status-value up' : 'status-value down';
+                }
+            } catch (error) {
+                console.error('Error loading health:', error);
+                const systemStatusEl = document.getElementById('systemStatus');
+                if (systemStatusEl) {
+                    systemStatusEl.textContent = '⚠ Status Check Failed';
+                    systemStatusEl.className = 'status-value down';
+                }
+            }
+        }
+
+        // Load operations
+        async function loadOperations() {
+            const container = document.getElementById('operationsContent');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const health = await fetch('/api/health').then(r => r.json());
+                const services = health.services || {};
+
+                container.innerHTML = `
+                    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                        <div class="stat-box">
+                            <div class="stat-label">Log Producer</div>
+                            <div class="stat-value" style="font-size: 1.5em; color: ${services.producerService?.status === 'up' ? '#4a9b23' : '#d32f2f'};">
+                                ${services.producerService?.status === 'up' ? '✓ Running' : '✗ Stopped'}
+                            </div>
+                            <div style="margin-top: 10px; color: #999; font-size: 0.9em;">
+                                Port: 8081<br>
+                                Endpoint: /api/logs
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Log Consumer</div>
+                            <div class="stat-value" style="font-size: 1.5em; color: ${services.consumerService?.status === 'up' ? '#4a9b23' : '#d32f2f'};">
+                                ${services.consumerService?.status === 'up' ? '✓ Running' : '✗ Stopped'}
+                            </div>
+                            <div style="margin-top: 10px; color: #999; font-size: 0.9em;">
+                                Port: 8082<br>
+                                Kafka Consumer
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Partition Manager</div>
+                            <div class="stat-value" style="font-size: 1.5em; color: ${services.partitionManager?.status === 'up' ? '#4a9b23' : '#d32f2f'};">
+                                ${services.partitionManager?.status === 'up' ? '✓ Running' : '✗ Stopped'}
+                            </div>
+                            <div style="margin-top: 10px; color: #999; font-size: 0.9em;">
+                                Port: 8083<br>
+                                Auto-creates partitions
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Query Service</div>
+                            <div class="stat-value" style="font-size: 1.5em; color: ${services.queryService?.status === 'up' ? '#4a9b23' : '#d32f2f'};">
+                                ${services.queryService?.status === 'up' ? '✓ Running' : '✗ Stopped'}
+                            </div>
+                            <div style="margin-top: 10px; color: #999; font-size: 0.9em;">
+                                Port: 8084<br>
+                                Endpoint: /api/query/logs
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 30px; padding: 20px; background: rgba(0, 0, 0, 0.2); border-radius: 8px;">
+                        <h3 style="color: #a8e063; margin-bottom: 15px;">System Architecture</h3>
+                        <p style="line-height: 1.8; color: #c0c0c0;">
+                            <strong>Composite Partitioning:</strong> Daily time-based parent partitions with 256 source hash-based sub-partitions per day.<br>
+                            <strong>Write Flow:</strong> Log Producer → Kafka → Log Consumer → Partitioned PostgreSQL<br>
+                            <strong>Query Flow:</strong> Query Service → Partition-pruned queries → Results<br>
+                            <strong>Management:</strong> Partition Manager pre-creates partitions 24 hours in advance
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `<div class="error-message">Error loading operations: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize
+        setDefaultTimes();
+        loadHealth();
+        loadMetrics();
+        loadPartitionStats();
+        loadOperations();
+
+        // Auto-refresh every 15 seconds
+        setInterval(() => {
+            loadHealth();
+            loadMetrics();
+        }, 15000);
+
+        setInterval(() => {
+            loadPartitionStats();
+            loadOperations();
+        }, 30000);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,92 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.log
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Application logs
+log-producer.log
+log-consumer.log
+query-service.log
+partition-manager.log
+
+# Docker
+docker-compose.override.yml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build artifacts
+*.jar
+!**/target/*.jar
+
+# Dashboard server
+dashboard-server/node_modules/
+dashboard-server/.env
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar

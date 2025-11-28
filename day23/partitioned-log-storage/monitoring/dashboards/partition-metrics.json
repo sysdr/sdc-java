@@ -1,0 +1,39 @@
+{
+  "dashboard": {
+    "title": "Partitioned Log Storage Metrics",
+    "panels": [
+      {
+        "title": "Logs Produced Rate",
+        "targets": [
+          {
+            "expr": "rate(logs_produced_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Logs Written Rate",
+        "targets": [
+          {
+            "expr": "rate(logs_written_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Query Duration",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(query_duration_bucket[1m]))"
+          }
+        ]
+      },
+      {
+        "title": "Partitions Created",
+        "targets": [
+          {
+            "expr": "partitions_created_total"
+          }
+        ]
+      }
+    ]
+  }
+}

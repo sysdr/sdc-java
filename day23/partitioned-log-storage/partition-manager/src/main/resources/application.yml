@@ -1,0 +1,25 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: partition-manager
+  datasource:
+    url: jdbc:postgresql://localhost:5432/logdb
+    username: loguser
+    password: logpass
+    driver-class-name: org.postgresql.Driver
+
+partition:
+  retention:
+    days: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
