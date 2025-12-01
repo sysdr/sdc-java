@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consistent Hashing System - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 Consistent Hashing System Dashboard</h1>
+            <p class="subtitle">Distributed Log Storage with Load Balancing</p>
+        </header>
+
+        <!-- Project Overview Section -->
+        <section class="overview-section">
+            <h2>📋 Project Overview</h2>
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <h3>What is Consistent Hashing?</h3>
+                    <p>Consistent hashing is a distributed hashing scheme that maps keys and nodes to a circular hash space. When a node is added or removed, only ~1/N of keys need to be remapped (where N is the number of nodes).</p>
+                </div>
+                <div class="overview-card">
+                    <h3>System Architecture</h3>
+                    <p><strong>Log Producers</strong> → <strong>API Gateway</strong> → <strong>Kafka</strong> → <strong>Storage Coordinator</strong> → <strong>Storage Nodes (1-3)</strong></p>
+                    <p>Uses Redis for ring state coordination and PostgreSQL for persistent storage.</p>
+                </div>
+                <div class="overview-card">
+                    <h3>Key Features</h3>
+                    <ul>
+                        <li>✅ 150 virtual nodes per physical node for 95%+ distribution fairness</li>
+                        <li>✅ Automatic load balancing across storage nodes</li>
+                        <li>✅ Dynamic node management with TTL-based failure detection</li>
+                        <li>✅ Circuit breaker pattern for fault tolerance</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Real-time Metrics Section -->
+        <section class="metrics-section">
+            <h2>📊 Real-time System Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card" id="balance-score-card">
+                    <div class="metric-label">Distribution Balance Score</div>
+                    <div class="metric-value" id="balance-score">--</div>
+                    <div class="metric-desc">Higher is better (95%+ is excellent)</div>
+                </div>
+                <div class="metric-card" id="active-nodes-card">
+                    <div class="metric-label">Active Storage Nodes</div>
+                    <div class="metric-value" id="active-nodes">--</div>
+                    <div class="metric-desc">Nodes currently in the hash ring</div>
+                </div>
+                <div class="metric-card" id="total-logs-card">
+                    <div class="metric-label">Total Logs Stored</div>
+                    <div class="metric-value" id="total-logs">--</div>
+                    <div class="metric-desc">Cumulative logs across all nodes</div>
+                </div>
+                <div class="metric-card" id="ingestion-rate-card">
+                    <div class="metric-label">Log Ingestion Rate</div>
+                    <div class="metric-value" id="ingestion-rate">--</div>
+                    <div class="metric-desc">Logs per minute</div>
+                </div>
+            </div>
+
+            <!-- Distribution Details -->
+            <div class="distribution-details" id="distribution-details">
+                <h3>Log Distribution per Node</h3>
+                <div id="logs-per-node" class="logs-per-node"></div>
+            </div>
+        </section>
+
+        <!-- Prometheus Demo Section -->
+        <section class="prometheus-section">
+            <h2>🔍 Prometheus Query Demo</h2>
+            <div class="prometheus-demo">
+                <div class="query-panel">
+                    <h3>Try Prometheus Queries</h3>
+                    <div class="query-input-group">
+                        <input type="text" id="prometheus-query" placeholder="Enter PromQL query (e.g., sum(storage_node_log_count))" 
+                               value="sum(storage_node_log_count)">
+                        <button onclick="executePrometheusQuery()">Execute Query</button>
+                    </div>
+                    <div class="query-examples">
+                        <strong>Example Queries:</strong>
+                        <ul>
+                            <li><code>sum(storage_node_log_count)</code> - Total logs stored</li>
+                            <li><code>storage_distribution_balance_score</code> - Balance score</li>
+                            <li><code>sum(rate(logs_ingested_total[5m])) * 60</code> - Ingestion rate (logs/min)</li>
+                            <li><code>storage_node_log_count</code> - Logs per node</li>
+                            <li><code>sum(rate(logs_routed_total[1m])) by (target_node)</code> - Routing rate per node</li>
+                        </ul>
+                    </div>
+                    <div id="prometheus-result" class="query-result"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grafana Section -->
+        <section class="grafana-section">
+            <h2>📈 Grafana Dashboards</h2>
+            
+            <!-- Demo: How Grafana Queries Work -->
+            <div class="grafana-demo-section">
+                <h3>🔍 How Grafana Fetches Queries and Creates Graphs</h3>
+                <p class="demo-intro">Grafana connects to Prometheus, executes PromQL queries, and visualizes the results. Here's how it works:</p>
+                
+                <div class="query-to-graph-demo">
+                    <div class="demo-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Prometheus Query (PromQL)</h4>
+                            <div class="query-box">
+                                <code>sum(rate(logs_ingested_total[5m])) * 60</code>
+                            </div>
+                            <p class="step-desc">Grafana sends this query to Prometheus API</p>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-arrow">→</div>
+                    
+                    <div class="demo-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Prometheus Response</h4>
+                            <div class="response-box">
+                                <pre>{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": [{
+      "value": [1733045123, "1250.5"]
+    }]
+  }
+}</pre>
+                            </div>
+                            <p class="step-desc">Returns time series data with timestamp and value</p>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-arrow">→</div>
+                    
+                    <div class="demo-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Grafana Visualization</h4>
+                            <div class="graph-preview">
+                                <div class="graph-mock">
+                                    <div class="graph-bars">
+                                        <div class="bar" style="height: 60%"></div>
+                                        <div class="bar" style="height: 75%"></div>
+                                        <div class="bar" style="height: 80%"></div>
+                                        <div class="bar" style="height: 70%"></div>
+                                        <div class="bar" style="height: 85%"></div>
+                                    </div>
+                                    <div class="graph-label">Logs/min over time</div>
+                                </div>
+                            </div>
+                            <p class="step-desc">Grafana renders the data as a graph/visualization</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Example Queries Used in Grafana -->
+                <div class="grafana-queries-examples">
+                    <h4>📊 Example Queries Used in Grafana Dashboard</h4>
+                    <div class="query-examples-grid">
+                        <div class="query-example-card">
+                            <div class="query-title">Log Ingestion Rate</div>
+                            <code class="query-code">sum(rate(logs_ingested_total[5m])) * 60</code>
+                            <div class="query-explanation">
+                                <strong>What it does:</strong> Calculates logs ingested per minute by taking the rate over 5 minutes and converting to per-minute
+                            </div>
+                            <div class="graph-type-badge">Graph Type: Time Series</div>
+                        </div>
+                        
+                        <div class="query-example-card">
+                            <div class="query-title">Distribution Balance Score</div>
+                            <code class="query-code">storage_distribution_balance_score</code>
+                            <div class="query-explanation">
+                                <strong>What it does:</strong> Returns the current balance score (0-100) showing how evenly logs are distributed
+                            </div>
+                            <div class="graph-type-badge">Graph Type: Stat Panel</div>
+                        </div>
+                        
+                        <div class="query-example-card">
+                            <div class="query-title">Logs per Node</div>
+                            <code class="query-code">storage_node_log_count</code>
+                            <div class="query-explanation">
+                                <strong>What it does:</strong> Returns the current log count for each storage node
+                            </div>
+                            <div class="graph-type-badge">Graph Type: Bar Gauge</div>
+                        </div>
+                        
+                        <div class="query-example-card">
+                            <div class="query-title">Routing Rate by Node</div>
+                            <code class="query-code">sum(rate(logs_routed_total[1m])) by (target_node)</code>
+                            <div class="query-explanation">
+                                <strong>What it does:</strong> Shows routing throughput per second for each node, grouped by target node
+                            </div>
+                            <div class="graph-type-badge">Graph Type: Time Series (Multi-line)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Live Query Demo -->
+                <div class="live-query-demo">
+                    <h4>🎯 Try It Live: See How Grafana Queries Work</h4>
+                    <div class="live-demo-controls">
+                        <select id="demo-query-select" onchange="updateDemoQuery()">
+                            <option value="sum(rate(logs_ingested_total[5m])) * 60">Log Ingestion Rate</option>
+                            <option value="storage_distribution_balance_score">Balance Score</option>
+                            <option value="storage_node_log_count">Logs per Node</option>
+                            <option value="sum(rate(logs_routed_total[1m])) by (target_node)">Routing Rate by Node</option>
+                            <option value="count(storage_node_log_count)">Active Nodes Count</option>
+                        </select>
+                        <button onclick="executeDemoQuery()">Execute Query</button>
+                    </div>
+                    <div class="demo-query-result">
+                        <div class="demo-query-box">
+                            <strong>Query:</strong> <code id="demo-query-text">sum(rate(logs_ingested_total[5m])) * 60</code>
+                        </div>
+                        <div class="demo-response-box">
+                            <strong>Prometheus Response:</strong>
+                            <pre id="demo-query-response">Click "Execute Query" to see the response...</pre>
+                        </div>
+                        <div class="demo-graph-explanation">
+                            <strong>How Grafana Uses This:</strong>
+                            <p id="demo-graph-explanation-text">Grafana would take this data and create a time series graph showing logs ingested per minute over time. Each data point becomes a point on the line chart.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Demo Graphs Showing How Grafana Visualizes Queries -->
+            <div class="grafana-demo-graphs">
+                <h4>📊 Demo: How Grafana Visualizes Query Results</h4>
+                <p class="demo-intro">Select a query below to see how Grafana would visualize the data:</p>
+                
+                <div class="graph-selector">
+                    <select id="graph-query-select" onchange="updateDemoGraph()">
+                        <option value="ingestion">Log Ingestion Rate (Time Series)</option>
+                        <option value="balance">Balance Score (Stat Panel)</option>
+                        <option value="logs-per-node">Logs per Node (Bar Gauge)</option>
+                        <option value="routing-rate">Routing Rate by Node (Multi-line Graph)</option>
+                        <option value="active-nodes">Active Nodes Count (Stat Panel)</option>
+                    </select>
+                </div>
+                
+                <div class="demo-graph-container">
+                    <div class="graph-header">
+                        <h5 id="graph-title">Log Ingestion Rate</h5>
+                        <div class="graph-query-info">
+                            <strong>Query:</strong> <code id="graph-query-code">sum(rate(logs_ingested_total[5m])) * 60</code>
+                        </div>
+                    </div>
+                    
+                    <!-- Time Series Graph -->
+                    <div id="graph-ingestion" class="demo-graph active">
+                        <div class="graph-canvas">
+                            <svg id="time-series-svg" width="100%" height="300" viewBox="0 0 800 300">
+                                <!-- Grid lines -->
+                                <defs>
+                                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#FF9800;stop-opacity:0.8" />
+                                        <stop offset="100%" style="stop-color:#FF9800;stop-opacity:0.1" />
+                                    </linearGradient>
+                                </defs>
+                                <!-- Y-axis labels -->
+                                <text x="30" y="20" fill="#888" font-size="12">1200</text>
+                                <text x="30" y="80" fill="#888" font-size="12">900</text>
+                                <text x="30" y="140" fill="#888" font-size="12">600</text>
+                                <text x="30" y="200" fill="#888" font-size="12">300</text>
+                                <text x="30" y="260" fill="#888" font-size="12">0</text>
+                                <!-- X-axis labels -->
+                                <text x="100" y="290" fill="#888" font-size="12">10:00</text>
+                                <text x="250" y="290" fill="#888" font-size="12">10:05</text>
+                                <text x="400" y="290" fill="#888" font-size="12">10:10</text>
+                                <text x="550" y="290" fill="#888" font-size="12">10:15</text>
+                                <text x="700" y="290" fill="#888" font-size="12">10:20</text>
+                                <!-- Area under curve -->
+                                <path id="area-path" d="M 100 200 L 150 180 L 200 160 L 250 140 L 300 150 L 350 130 L 400 120 L 450 110 L 500 100 L 550 105 L 600 95 L 650 90 L 700 85 L 700 250 L 100 250 Z" fill="url(#lineGradient)" />
+                                <!-- Line -->
+                                <path id="line-path" d="M 100 200 L 150 180 L 200 160 L 250 140 L 300 150 L 350 130 L 400 120 L 450 110 L 500 100 L 550 105 L 600 95 L 650 90 L 700 85" 
+                                      stroke="#FF9800" stroke-width="3" fill="none" />
+                                <!-- Data points -->
+                                <circle cx="100" cy="200" r="4" fill="#FF9800" />
+                                <circle cx="150" cy="180" r="4" fill="#FF9800" />
+                                <circle cx="200" cy="160" r="4" fill="#FF9800" />
+                                <circle cx="250" cy="140" r="4" fill="#FF9800" />
+                                <circle cx="300" cy="150" r="4" fill="#FF9800" />
+                                <circle cx="350" cy="130" r="4" fill="#FF9800" />
+                                <circle cx="400" cy="120" r="4" fill="#FF9800" />
+                                <circle cx="450" cy="110" r="4" fill="#FF9800" />
+                                <circle cx="500" cy="100" r="4" fill="#FF9800" />
+                                <circle cx="550" cy="105" r="4" fill="#FF9800" />
+                                <circle cx="600" cy="95" r="4" fill="#FF9800" />
+                                <circle cx="650" cy="90" r="4" fill="#FF9800" />
+                                <circle cx="700" cy="85" r="4" fill="#FF9800" />
+                            </svg>
+                        </div>
+                        <div class="graph-legend">
+                            <span class="legend-item"><span class="legend-color" style="background: #FF9800;"></span> Logs/min</span>
+                        </div>
+                        <p class="graph-description">Grafana creates a time series line graph connecting data points over time. The area under the curve is filled to show the trend visually.</p>
+                    </div>
+                    
+                    <!-- Stat Panel -->
+                    <div id="graph-balance" class="demo-graph">
+                        <div class="stat-panel-demo">
+                            <div class="stat-value-large" id="stat-balance-value">95.8%</div>
+                            <div class="stat-label">Distribution Balance Score</div>
+                            <div class="stat-threshold-indicator good">Excellent (95%+)</div>
+                        </div>
+                        <p class="graph-description">Grafana displays this as a Stat panel with a large number, color-coded based on thresholds (green for good, yellow/orange for warning, red for critical).</p>
+                    </div>
+                    
+                    <!-- Bar Gauge -->
+                    <div id="graph-logs-per-node" class="demo-graph">
+                        <div class="bar-gauge-container">
+                            <div class="bar-gauge-item">
+                                <div class="bar-gauge-label">storage-node-1</div>
+                                <div class="bar-gauge-bar">
+                                    <div class="bar-gauge-fill" style="width: 33.5%; background: #4CAF50;"></div>
+                                    <span class="bar-gauge-value">3,342</span>
+                                </div>
+                            </div>
+                            <div class="bar-gauge-item">
+                                <div class="bar-gauge-label">storage-node-2</div>
+                                <div class="bar-gauge-bar">
+                                    <div class="bar-gauge-fill" style="width: 33.3%; background: #FF9800;"></div>
+                                    <span class="bar-gauge-value">3,329</span>
+                                </div>
+                            </div>
+                            <div class="bar-gauge-item">
+                                <div class="bar-gauge-label">storage-node-3</div>
+                                <div class="bar-gauge-bar">
+                                    <div class="bar-gauge-fill" style="width: 33.2%; background: #FFC107;"></div>
+                                    <span class="bar-gauge-value">3,329</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="graph-description">Grafana creates horizontal bar gauges showing the value for each node. This makes it easy to compare distribution across nodes at a glance.</p>
+                    </div>
+                    
+                    <!-- Multi-line Graph -->
+                    <div id="graph-routing-rate" class="demo-graph">
+                        <div class="graph-canvas">
+                            <svg id="multi-line-svg" width="100%" height="300" viewBox="0 0 800 300">
+                                <!-- Grid lines -->
+                                <text x="30" y="20" fill="#888" font-size="12">50</text>
+                                <text x="30" y="80" fill="#888" font-size="12">40</text>
+                                <text x="30" y="140" fill="#888" font-size="12">30</text>
+                                <text x="30" y="200" fill="#888" font-size="12">20</text>
+                                <text x="30" y="260" fill="#888" font-size="12">10</text>
+                                <text x="30" y="290" fill="#888" font-size="12">0</text>
+                                <!-- X-axis labels -->
+                                <text x="100" y="290" fill="#888" font-size="12">10:00</text>
+                                <text x="250" y="290" fill="#888" font-size="12">10:05</text>
+                                <text x="400" y="290" fill="#888" font-size="12">10:10</text>
+                                <text x="550" y="290" fill="#888" font-size="12">10:15</text>
+                                <text x="700" y="290" fill="#888" font-size="12">10:20</text>
+                                <!-- Line 1: node-1 -->
+                                <path d="M 100 200 L 150 190 L 200 180 L 250 170 L 300 165 L 350 160 L 400 155 L 450 150 L 500 145 L 550 140 L 600 135 L 650 130 L 700 125" 
+                                      stroke="#4CAF50" stroke-width="2.5" fill="none" />
+                                <!-- Line 2: node-2 -->
+                                <path d="M 100 210 L 150 200 L 200 190 L 250 180 L 300 175 L 350 170 L 400 165 L 450 160 L 500 155 L 550 150 L 600 145 L 650 140 L 700 135" 
+                                      stroke="#FF9800" stroke-width="2.5" fill="none" />
+                                <!-- Line 3: node-3 -->
+                                <path d="M 100 220 L 150 210 L 200 200 L 250 190 L 300 185 L 350 180 L 400 175 L 450 170 L 500 165 L 550 160 L 600 155 L 650 150 L 700 145" 
+                                      stroke="#FFC107" stroke-width="2.5" fill="none" />
+                            </svg>
+                        </div>
+                        <div class="graph-legend">
+                            <span class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> storage-node-1</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #FF9800;"></span> storage-node-2</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #FFC107;"></span> storage-node-3</span>
+                        </div>
+                        <p class="graph-description">Grafana creates a multi-line time series graph where each line represents a different node. This allows you to compare routing patterns across nodes over time.</p>
+                    </div>
+                    
+                    <!-- Active Nodes Stat -->
+                    <div id="graph-active-nodes" class="demo-graph">
+                        <div class="stat-panel-demo">
+                            <div class="stat-value-large" id="stat-nodes-value">3</div>
+                            <div class="stat-label">Active Storage Nodes</div>
+                            <div class="stat-threshold-indicator good">All nodes healthy</div>
+                        </div>
+                        <p class="graph-description">Grafana displays this as a Stat panel showing a single number with color coding based on the count (green for 3, yellow for 2, red for 1 or 0).</p>
+                    </div>
+                </div>
+                
+                <div class="grafana-link-section">
+                    <p>To access the full Grafana dashboard with live data:</p>
+                    <a href="http://localhost:3000" target="_blank" class="grafana-link">
+                        🌐 Open Grafana Dashboard
+                    </a>
+                    <p class="grafana-credentials">Credentials: admin / admin</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Status Section -->
+        <section class="status-section">
+            <h2>🔧 System Status</h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <h3>API Gateway</h3>
+                    <div class="status-indicator" id="gateway-status">Checking...</div>
+                    <p>Port: 8080</p>
+                </div>
+                <div class="status-card">
+                    <h3>Storage Coordinator</h3>
+                    <div class="status-indicator" id="coordinator-status">Checking...</div>
+                    <p>Port: 8081</p>
+                </div>
+                <div class="status-card">
+                    <h3>Prometheus</h3>
+                    <div class="status-indicator" id="prometheus-status">Checking...</div>
+                    <p>Port: 9090</p>
+                </div>
+                <div class="status-card">
+                    <h3>Grafana</h3>
+                    <div class="status-indicator" id="grafana-status">Checking...</div>
+                    <p>Port: 3000</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

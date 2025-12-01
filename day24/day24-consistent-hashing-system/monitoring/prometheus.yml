@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8080']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'storage-coordinator'
+    static_configs:
+      - targets: ['storage-coordinator:8081']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'storage-nodes'
+    static_configs:
+      - targets: 
+        - 'storage-node-1:8082'
+        - 'storage-node-2:8082'
+        - 'storage-node-3:8082'
+    metrics_path: '/actuator/prometheus'
