@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leader Election Cluster Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2d5016 0%, #3d6b1f 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: #c8e6c9;
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .status-item label {
+            display: block;
+            color: #a5d6a7;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .status-item .value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .status-item .value.healthy {
+            color: #81c784;
+        }
+
+        .status-item .value.warning {
+            color: #ffb74d;
+        }
+
+        .status-item .value.error {
+            color: #e57373;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            border: 1px solid #3a3a3a;
+        }
+
+        .card h2 {
+            color: #81c784;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #3d6b1f;
+            padding-bottom: 10px;
+        }
+
+        .node-list {
+            list-style: none;
+        }
+
+        .node-item {
+            background: #1e1e1e;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .node-item.leader {
+            border-left-color: #81c784;
+            background: #1a2e1a;
+        }
+
+        .node-item.follower {
+            border-left-color: #ffb74d;
+        }
+
+        .node-item.candidate {
+            border-left-color: #e57373;
+        }
+
+        .node-info {
+            flex: 1;
+        }
+
+        .node-id {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 1.1em;
+        }
+
+        .node-state {
+            color: #a5d6a7;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .node-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .badge-leader {
+            background: #4caf50;
+            color: #1a1a1a;
+        }
+
+        .badge-follower {
+            background: #ff9800;
+            color: #1a1a1a;
+        }
+
+        .badge-candidate {
+            background: #f44336;
+            color: #ffffff;
+        }
+
+        .operations {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .operation-form {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #a5d6a7;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #81c784;
+            box-shadow: 0 0 0 2px rgba(129, 199, 132, 0.2);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            color: #1a1a1a;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-secondary {
+            background: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #4a4a4a;
+        }
+
+        .response-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #3a3a3a;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .response-box pre {
+            color: #a5d6a7;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #3a3a3a;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #81c784;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            color: #a5d6a7;
+            font-size: 0.9em;
+        }
+
+        .query-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .query-box code {
+            color: #ffb74d;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            display: block;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .query-result {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .query-result pre {
+            color: #a5d6a7;
+            font-size: 0.85em;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .links {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .link-btn {
+            padding: 12px 20px;
+            background: #3a3a3a;
+            color: #81c784;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .link-btn:hover {
+            background: #4a4a4a;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #3a3a3a;
+            border-top-color: #81c784;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            color: #81c784;
+        }
+
+        .alert-error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            color: #e57373;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            border: none;
+            color: #1a1a1a;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏛️ Leader Election Cluster Dashboard</h1>
+            <p class="subtitle">Raft Consensus Protocol - Distributed Storage System</p>
+            <div class="status-bar">
+                <div class="status-item">
+                    <label>Cluster Status</label>
+                    <div class="value" id="clusterStatus">Checking...</div>
+                </div>
+                <div class="status-item">
+                    <label>Current Leader</label>
+                    <div class="value" id="currentLeader">-</div>
+                </div>
+                <div class="status-item">
+                    <label>Cluster Size</label>
+                    <div class="value" id="clusterSize">-</div>
+                </div>
+                <div class="status-item">
+                    <label>Last Updated</label>
+                    <div class="value" id="lastUpdate">-</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📊 Cluster Nodes</h2>
+                <ul class="node-list" id="nodeList">
+                    <li>Loading nodes...</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>⚡ Operations</h2>
+                <div class="operations">
+                    <div class="operation-form">
+                        <div class="form-group">
+                            <label for="writeData">Write Data to Cluster</label>
+                            <textarea id="writeData" placeholder='Enter JSON format:
+{"data": "Your log entry here", "source": "dashboard"}
+
+Or simply enter text (will be converted automatically):
+Your log entry here'></textarea>
+                            <div style="color: #a5d6a7; font-size: 0.85em; margin-top: 5px;">
+                                <strong>Format:</strong> JSON with "data" and optional "source" fields, or plain text
+                            </div>
+                            <div style="color: #ffb74d; font-size: 0.85em; margin-top: 5px;">
+                                <strong>Examples:</strong><br>
+                                • <code>{"data": "Server started at 14:30", "source": "system"}</code><br>
+                                • <code>{"data": "User login: admin", "source": "auth"}</code><br>
+                                • <code>Application error: Connection timeout</code> (plain text)
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="writeData()">Write to Cluster</button>
+                        <div class="response-box" id="writeResponse" style="display: none;">
+                            <pre id="writeResponseContent"></pre>
+                        </div>
+                    </div>
+                    <div class="operation-form">
+                        <button class="btn btn-secondary" onclick="refreshStatus()">Refresh Cluster Status</button>
+                        <div class="timestamp" id="statusTimestamp"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>📈 Prometheus Metrics</h2>
+            <div class="metrics-grid" id="metricsGrid">
+                <div class="metric-card">
+                    <div class="metric-label">Elections Total</div>
+                    <div class="metric-value" id="metricElections">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Writes Total</div>
+                    <div class="metric-value" id="metricWrites">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Heartbeat Success</div>
+                    <div class="metric-value" id="metricHeartbeat">-</div>
+                </div>
+            </div>
+
+            <h3 style="color: #81c784; margin-top: 30px; margin-bottom: 15px;">Example Prometheus Queries</h3>
+            
+            <div class="query-box">
+                <strong style="color: #a5d6a7;">Election Rate (per minute)</strong>
+                <code>rate(raft_elections_total[1m])</code>
+                <button class="btn btn-primary btn-small" onclick="runPrometheusQuery('rate(raft_elections_total[1m])')">Run Query</button>
+                <div class="query-result" id="query1" style="display: none;"></div>
+            </div>
+
+            <div class="query-box">
+                <strong style="color: #a5d6a7;">Write Throughput (per second)</strong>
+                <code>rate(raft_writes_total[1m])</code>
+                <button class="btn btn-primary btn-small" onclick="runPrometheusQuery('rate(raft_writes_total[1m])')">Run Query</button>
+                <div class="query-result" id="query2" style="display: none;"></div>
+            </div>
+
+            <div class="query-box">
+                <strong style="color: #a5d6a7;">Heartbeat Success Ratio</strong>
+                <code>raft_heartbeat_success / raft_heartbeat_total</code>
+                <button class="btn btn-primary btn-small" onclick="runPrometheusQuery('raft_heartbeat_success / raft_heartbeat_total')">Run Query</button>
+                <div class="query-result" id="query3" style="display: none;"></div>
+            </div>
+
+            <div class="links">
+                <a href="http://localhost:9090" target="_blank" class="link-btn">🔍 Open Prometheus UI</a>
+                <a href="http://localhost:9090/graph" target="_blank" class="link-btn">📊 Prometheus Graph</a>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>📊 Grafana Integration</h2>
+            <p style="color: #a5d6a7; margin-bottom: 20px;">
+                Grafana provides advanced visualization and monitoring capabilities for the cluster. 
+                Pre-configured dashboards are available showing leader election metrics, cluster health, 
+                write performance, and replication status.
+            </p>
+            
+            <div style="background: #1e1e1e; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="color: #ffb74d; margin-bottom: 15px;">Available Dashboards</h3>
+                <ul style="color: #a5d6a7; line-height: 2;">
+                    <li><strong>Leader Election:</strong> Election frequency and duration metrics</li>
+                    <li><strong>Cluster Health:</strong> Heartbeat success rates and node status</li>
+                    <li><strong>Write Performance:</strong> Throughput and latency (P99) metrics</li>
+                    <li><strong>Replication Lag:</strong> Follower sync status and lag monitoring</li>
+                </ul>
+            </div>
+
+            <div class="links">
+                <a href="http://localhost:3000" target="_blank" class="link-btn">📈 Open Grafana (admin/admin)</a>
+                <a href="http://localhost:3000/dashboards" target="_blank" class="link-btn">📋 View Dashboards</a>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>🔗 Quick Links</h2>
+            <div class="links">
+                <a href="http://localhost:8080/api/status" target="_blank" class="link-btn">API Gateway Status</a>
+                <a href="http://localhost:8081/raft/status" target="_blank" class="link-btn">Node 1 Status</a>
+                <a href="http://localhost:8082/raft/status" target="_blank" class="link-btn">Node 2 Status</a>
+                <a href="http://localhost:8083/raft/status" target="_blank" class="link-btn">Node 3 Status</a>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshAll()" title="Refresh All Data">🔄</button>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        const PROMETHEUS_BASE = 'http://localhost:9090';
+
+        // Global error handler to prevent uncaught promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            // Silently handle connection errors - they're expected when nodes are down
+            if (event.reason && (
+                event.reason.message && event.reason.message.includes('Failed to fetch') ||
+                event.reason.message && event.reason.message.includes('Connection refused') ||
+                event.reason.name === 'TypeError'
+            )) {
+                event.preventDefault();
+                return;
+            }
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshAll();
+            // Auto-refresh every 5 seconds
+            setInterval(refreshAll, 5000);
+        });
+
+        async function refreshAll() {
+            await refreshStatus();
+            await loadMetrics();
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/status`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                
+                updateClusterStatus(data);
+                await updateNodeDetails(data);
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                document.getElementById('statusTimestamp').textContent = `Last updated: ${new Date().toLocaleString()}`;
+            } catch (error) {
+                console.error('Error fetching status:', error);
+                document.getElementById('clusterStatus').textContent = 'Connection Error';
+                document.getElementById('clusterStatus').className = 'value error';
+                document.getElementById('currentLeader').textContent = 'Unavailable';
+                document.getElementById('currentLeader').className = 'value error';
+                document.getElementById('nodeList').innerHTML = '<li style="color: #e57373;">Unable to connect to cluster. Ensure services are running.</li>';
+            }
+        }
+
+        function updateClusterStatus(data) {
+            const statusEl = document.getElementById('clusterStatus');
+            const leaderEl = document.getElementById('currentLeader');
+            const sizeEl = document.getElementById('clusterSize');
+
+            if (data.leader && data.leader !== 'none') {
+                statusEl.textContent = 'Healthy';
+                statusEl.className = 'value healthy';
+            } else {
+                statusEl.textContent = 'No Leader';
+                statusEl.className = 'value error';
+            }
+
+            leaderEl.textContent = data.leader && data.leader !== 'none' 
+                ? data.leader.split('/').pop() 
+                : 'None';
+            leaderEl.className = data.leader && data.leader !== 'none' ? 'value healthy' : 'value error';
+
+            sizeEl.textContent = data.clusterSize || 0;
+        }
+
+        async function updateNodeDetails(data) {
+            const nodeList = document.getElementById('nodeList');
+            nodeList.innerHTML = '';
+
+            const nodes = data.nodes || [];
+            
+            for (const nodeUrl of nodes) {
+                try {
+                    // Extract node identifier (e.g., "storage-node-1" from "http://storage-node-1:8081")
+                    const urlParts = nodeUrl.split('/');
+                    const hostPart = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+                    const nodeId = hostPart ? hostPart.split(':')[0] : nodeUrl.split('/').pop();
+                    const nodePort = nodeUrl.split(':').pop();
+                    
+                    // Try to get detailed status from individual node via API gateway
+                    let nodeStatus = { state: 'UNKNOWN', term: 0, leader: null };
+                    try {
+                        // Create AbortController for timeout
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 2000);
+                        
+                        // Use API gateway to proxy node status (avoids CORS issues)
+                        // Extract just the node number (e.g., "1" from "storage-node-1")
+                        const nodeNum = nodeId.replace("storage-node-", "").replace("node", "");
+                        const statusResponse = await fetch(`${API_BASE}/api/nodes/status?nodeId=${encodeURIComponent(nodeId)}`, {
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+                        
+                        if (statusResponse.ok) {
+                            nodeStatus = await statusResponse.json();
+                        }
+                    } catch (e) {
+                        // Node might be unreachable - silently handle this
+                        // Use default values from gateway status
+                        nodeStatus = { state: 'UNREACHABLE', term: 0, leader: null };
+                    }
+
+                    const isLeader = data.leader && data.leader.includes(nodeId);
+                    let state = nodeStatus.state;
+                    
+                    // If node is unreachable, try to infer state from gateway data
+                    if (state === 'UNREACHABLE' || state === 'UNKNOWN') {
+                        state = isLeader ? 'LEADER' : 'UNREACHABLE';
+                    } else {
+                        state = state || (isLeader ? 'LEADER' : 'FOLLOWER');
+                    }
+                    
+                    const li = document.createElement('li');
+                    li.className = `node-item ${state.toLowerCase()}`;
+                    
+                    const stateClass = state === 'LEADER' ? 'badge-leader' : 
+                                     state === 'FOLLOWER' ? 'badge-follower' : 
+                                     state === 'CANDIDATE' ? 'badge-candidate' : 'badge-follower';
+                    
+                    const statusText = state === 'UNREACHABLE' ? 'Node unreachable' : `Term: ${nodeStatus.term || 0}`;
+                    
+                    li.innerHTML = `
+                        <div class="node-info">
+                            <div class="node-id">${nodeId}</div>
+                            <div class="node-state">${statusText} | Port: ${nodePort}</div>
+                        </div>
+                        <span class="node-badge ${stateClass}">${state}</span>
+                    `;
+                    
+                    nodeList.appendChild(li);
+                } catch (error) {
+                    console.error(`Error fetching node ${nodeUrl}:`, error);
+                }
+            }
+        }
+
+        async function writeData() {
+            const dataInput = document.getElementById('writeData');
+            const responseBox = document.getElementById('writeResponse');
+            const responseContent = document.getElementById('writeResponseContent');
+            
+            const inputValue = dataInput.value.trim();
+            
+            let data;
+            // If empty, use default
+            if (!inputValue) {
+                data = { data: "Test entry from dashboard", source: "dashboard" };
+            } else {
+                try {
+                    // Try to parse as JSON first
+                    const parsed = JSON.parse(inputValue);
+                    // Ensure it has the required "data" field
+                    if (parsed.data) {
+                        data = parsed;
+                    } else {
+                        // If JSON but no "data" field, use the whole object as data
+                        data = { data: JSON.stringify(parsed), source: parsed.source || 'dashboard' };
+                    }
+                } catch (e) {
+                    // Not valid JSON, treat as plain text
+                    data = { data: inputValue, source: 'dashboard' };
+                }
+            }
+
+            responseBox.style.display = 'block';
+            responseContent.textContent = 'Sending write request...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/write`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                responseContent.textContent = JSON.stringify(result, null, 2);
+                
+                if (result.success) {
+                    responseBox.style.borderColor = '#4caf50';
+                    // Refresh status after write
+                    setTimeout(refreshStatus, 500);
+                } else {
+                    responseBox.style.borderColor = '#f44336';
+                }
+            } catch (error) {
+                responseContent.textContent = `Error: ${error.message}`;
+                responseBox.style.borderColor = '#f44336';
+            }
+        }
+
+        async function loadMetrics() {
+            try {
+                // Try to get metrics from Prometheus
+                const queries = [
+                    'raft_elections_total',
+                    'raft_writes_total',
+                    'raft_heartbeat_success'
+                ];
+
+                const metricIds = ['metricElections', 'metricWrites', 'metricHeartbeat'];
+                const defaultValues = ['0', '0', '0'];
+
+                for (let i = 0; i < queries.length; i++) {
+                    try {
+                        const response = await fetch(
+                            `${PROMETHEUS_BASE}/api/v1/query?query=${encodeURIComponent(queries[i])}`
+                        );
+                        if (!response.ok) continue;
+                        
+                        const data = await response.json();
+                        
+                        if (data.status === 'success' && data.data.result && data.data.result.length > 0) {
+                            const value = data.data.result[0].value[1];
+                            document.getElementById(metricIds[i]).textContent = parseFloat(value).toLocaleString();
+                        } else {
+                            document.getElementById(metricIds[i]).textContent = defaultValues[i];
+                        }
+                    } catch (e) {
+                        // Metric might not be available yet
+                        document.getElementById(metricIds[i]).textContent = defaultValues[i];
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                // Set default values on error
+                document.getElementById('metricElections').textContent = '0';
+                document.getElementById('metricWrites').textContent = '0';
+                document.getElementById('metricHeartbeat').textContent = '0';
+            }
+        }
+
+        async function runPrometheusQuery(query) {
+            const queryId = query.includes('elections') ? 'query1' : 
+                           query.includes('writes') ? 'query2' : 'query3';
+            const resultDiv = document.getElementById(queryId);
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<pre style="color: #ffb74d;">Executing query...</pre>';
+
+            try {
+                const response = await fetch(
+                    `${PROMETHEUS_BASE}/api/v1/query?query=${encodeURIComponent(query)}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    if (data.data.result && data.data.result.length > 0) {
+                        resultDiv.innerHTML = `<pre>${JSON.stringify(data.data, null, 2)}</pre>`;
+                    } else {
+                        resultDiv.innerHTML = `<pre style="color: #ffb74d;">No data available. Metrics may not be populated yet.</pre>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<pre style="color: #e57373;">Error: ${data.error || 'Unknown error'}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<pre style="color: #e57373;">Connection Error: ${error.message}\n\nMake sure Prometheus is running at ${PROMETHEUS_BASE}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>
+

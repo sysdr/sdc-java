@@ -1,0 +1,45 @@
+server:
+  port: ${NODE_PORT:8081}
+
+spring:
+  application:
+    name: storage-node
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:storagedb}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+node:
+  id: ${NODE_ID:node1}
+  port: ${NODE_PORT:8081}
+
+cluster:
+  nodes: ${CLUSTER_NODES:http://storage-node-2:8082,http://storage-node-3:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.storage: INFO
+    org.springframework: WARN

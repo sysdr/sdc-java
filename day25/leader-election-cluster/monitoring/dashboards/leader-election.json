@@ -1,0 +1,28 @@
+{
+  "dashboard": {
+    "title": "Leader Election Cluster",
+    "panels": [
+      {
+        "title": "Total Elections",
+        "targets": [{
+          "expr": "rate(raft_elections_total[5m])"
+        }],
+        "type": "graph"
+      },
+      {
+        "title": "Heartbeat Success Rate",
+        "targets": [{
+          "expr": "raft_heartbeat_success / raft_heartbeat_total"
+        }],
+        "type": "graph"
+      },
+      {
+        "title": "Write Throughput",
+        "targets": [{
+          "expr": "rate(raft_writes_total[1m])"
+        }],
+        "type": "graph"
+      }
+    ]
+  }
+}

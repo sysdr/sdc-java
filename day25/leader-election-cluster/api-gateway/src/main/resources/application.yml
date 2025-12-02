@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+storage:
+  nodes:
+    - http://storage-node-1:8081
+    - http://storage-node-2:8082
+    - http://storage-node-3:8083
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      storageCluster:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.gateway: INFO
