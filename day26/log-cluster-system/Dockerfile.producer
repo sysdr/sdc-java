@@ -1,0 +1,16 @@
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY cluster-coordinator/pom.xml cluster-coordinator/
+COPY log-producer/pom.xml log-producer/
+COPY log-consumer/pom.xml log-consumer/
+COPY api-gateway/pom.xml api-gateway/
+RUN mvn dependency:go-offline -pl log-producer -am
+COPY log-producer log-producer/
+RUN mvn clean package -DskipTests -pl log-producer -am
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/log-producer/target/*.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,93 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Package files
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# IDE files
+.DS_Store
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.env.local
+.env.local
+
+# Spring Boot
+application-local.yml
+application-local.properties
+*.pid
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist/
+build/
+out/
+bin/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker volumes data (if stored locally)
+postgres-data/
+grafana-data/
+redis-data/
+kafka-data/
+zookeeper-data/
+
+# Test coverage
+.nyc_output/
+coverage/
+*.lcov
+
+# Application specific
+*.pid
+*.seed
+*.pid.lock

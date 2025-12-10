@@ -1,0 +1,47 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: cluster-coordinator
+  
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+
+cluster:
+  node:
+    id: ${NODE_ID:coordinator-1}
+    port: 8081
+  heartbeat:
+    interval: 1000
+  failure:
+    timeout: 15000
+  gossip:
+    fanout: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.example.cluster: INFO
+    org.springframework.kafka: WARN

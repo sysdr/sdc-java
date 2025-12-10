@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Cluster System Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Log Cluster System Dashboard</h1>
+            <p class="subtitle">Monitor and manage your distributed cluster system</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="overview">Overview</button>
+            <button class="tab-btn" data-tab="cluster">Cluster Operations</button>
+            <button class="tab-btn" data-tab="health">Health Checks</button>
+            <button class="tab-btn" data-tab="prometheus">Prometheus</button>
+            <button class="tab-btn" data-tab="grafana">Grafana Demo</button>
+            <button class="tab-btn" data-tab="metrics">Metrics</button>
+        </nav>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Cluster Status</h3>
+                    <div id="cluster-status-card" class="status-card">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Service Health</h3>
+                    <div id="health-overview" class="health-grid">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button onclick="refreshAll()" class="btn btn-primary">🔄 Refresh All</button>
+                        <button onclick="checkClusterStatus()" class="btn btn-secondary">🔍 Check Cluster</button>
+                        <button onclick="checkAllHealth()" class="btn btn-secondary">❤️ Check Health</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>System Information</h3>
+                    <div id="system-info" class="info-list">
+                        <div class="info-item">
+                            <span class="label">Cluster Coordinator:</span>
+                            <span class="value">http://localhost:8081</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">API Gateway:</span>
+                            <span class="value">http://localhost:8080</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Prometheus:</span>
+                            <span class="value">http://localhost:9090</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Grafana:</span>
+                            <span class="value">http://localhost:3000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cluster Operations Tab -->
+        <div id="cluster" class="tab-content">
+            <div class="operations-section">
+                <div class="card">
+                    <h3>Cluster Status</h3>
+                    <button onclick="checkClusterStatus()" class="btn btn-primary">Get Status</button>
+                    <pre id="cluster-status-output" class="output"></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Cluster Membership</h3>
+                    <button onclick="getMembership()" class="btn btn-primary">Get Membership</button>
+                    <pre id="membership-output" class="output"></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Gossip Protocol</h3>
+                    <p class="description">Send gossip message to cluster coordinator</p>
+                    <textarea id="gossip-input" class="input" placeholder='{"members": {...}}'></textarea>
+                    <button onclick="sendGossip()" class="btn btn-primary">Send Gossip</button>
+                    <pre id="gossip-output" class="output"></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Anti-Entropy</h3>
+                    <p class="description">Perform anti-entropy operation for cluster repair</p>
+                    <textarea id="anti-entropy-input" class="input" placeholder='{"members": {...}}'></textarea>
+                    <button onclick="antiEntropy()" class="btn btn-primary">Anti-Entropy</button>
+                    <pre id="anti-entropy-output" class="output"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Checks Tab -->
+        <div id="health" class="tab-content">
+            <div class="operations-section">
+                <div class="card">
+                    <h3>All Services Health</h3>
+                    <button onclick="checkAllHealth()" class="btn btn-primary">Check All</button>
+                    <div id="all-health-output" class="health-details"></div>
+                </div>
+
+                <div class="card">
+                    <h3>Individual Service Health</h3>
+                    <div class="service-selector">
+                        <button onclick="checkHealth('coordinator')" class="btn btn-secondary">Coordinator</button>
+                        <button onclick="checkHealth('producer')" class="btn btn-secondary">Producer</button>
+                        <button onclick="checkHealth('consumer')" class="btn btn-secondary">Consumer</button>
+                        <button onclick="checkHealth('gateway')" class="btn btn-secondary">Gateway</button>
+                    </div>
+                    <pre id="health-output" class="output"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prometheus Tab -->
+        <div id="prometheus" class="tab-content">
+            <div class="operations-section">
+                <div class="card">
+                    <h3>Prometheus Query</h3>
+                    <p class="description">Execute PromQL queries against Prometheus</p>
+                    <input type="text" id="prom-query" class="input" placeholder="e.g., up or rate(cluster_heartbeats_sent_total[5m])">
+                    <button onclick="executePromQuery()" class="btn btn-primary">Execute Query</button>
+                    <pre id="prom-query-output" class="output"></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Prometheus Query Range</h3>
+                    <p class="description">Get time series data over a range</p>
+                    <input type="text" id="prom-query-range" class="input" placeholder="e.g., rate(cluster_heartbeats_sent_total[5m])" value="rate(cluster_heartbeats_sent_total[5m])">
+                    <div class="input-group">
+                        <input type="text" id="prom-start" class="input small" placeholder="Start (Unix timestamp)">
+                        <input type="text" id="prom-end" class="input small" placeholder="End (Unix timestamp)">
+                        <input type="text" id="prom-step" class="input small" placeholder="Step (e.g., 15s)" value="15s">
+                    </div>
+                    <div class="example-hint">
+                        <strong>💡 Tip:</strong> Click "Use Default (Last Hour)" to automatically fill in the last hour's data, or enter Unix timestamps manually.<br>
+                        <strong>Examples:</strong><br>
+                        • Step values: <code>15s</code>, <code>1m</code>, <code>5m</code>, <code>1h</code><br>
+                        • To get current timestamp: Open browser console and run <code>Math.floor(Date.now()/1000)</code>
+                    </div>
+                    <button onclick="executePromQueryRange()" class="btn btn-primary">Execute Range Query</button>
+                    <button onclick="setQueryRangeDefaults()" class="btn btn-secondary" style="margin-left: 10px;">Use Default (Last Hour)</button>
+                    <pre id="prom-range-output" class="output"></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Prometheus Targets</h3>
+                    <p class="description">View all Prometheus scrape targets</p>
+                    <button onclick="getPromTargets()" class="btn btn-primary">Get Targets</button>
+                    <pre id="prom-targets-output" class="output"></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Example Queries</h3>
+                    <div class="example-queries">
+                        <button onclick="setQuery('up')" class="btn-example">Service Availability</button>
+                        <button onclick="setQuery('rate(cluster_heartbeats_sent_total[5m])')" class="btn-example">Heartbeat Rate</button>
+                        <button onclick="setQuery('rate(cluster_heartbeats_received_total[5m])')" class="btn-example">Heartbeats Received</button>
+                        <button onclick="setQuery('cluster_failures_detected_total')" class="btn-example">Failures Detected</button>
+                        <button onclick="setQuery('jvm_memory_used_bytes{area=\"heap\"}')" class="btn-example">JVM Heap Memory</button>
+                        <button onclick="setQuery('rate(jvm_gc_pause_seconds_sum[5m])')" class="btn-example">GC Pause Time</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafana Demo Tab -->
+        <div id="grafana" class="tab-content">
+            <div class="grafana-demo">
+                <div class="card">
+                    <h3>Grafana Integration Demo</h3>
+                    <p class="description">
+                        This is a demonstration of how Grafana would integrate with the cluster system.
+                        Grafana is available at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> (admin/admin).
+                    </p>
+                    <div class="demo-dashboard">
+                        <div class="demo-panel">
+                            <h4>Cluster Health Score</h4>
+                            <div class="demo-metric">85%</div>
+                            <div class="demo-chart">
+                                <div class="chart-bar" style="height: 85%"></div>
+                            </div>
+                        </div>
+                        <div class="demo-panel">
+                            <h4>Heartbeat Rate</h4>
+                            <div class="demo-metric">12.5 /sec</div>
+                            <div class="demo-chart">
+                                <div class="chart-line"></div>
+                            </div>
+                        </div>
+                        <div class="demo-panel">
+                            <h4>Active Nodes</h4>
+                            <div class="demo-metric">4</div>
+                            <div class="demo-chart">
+                                <div class="chart-bar" style="height: 100%"></div>
+                            </div>
+                        </div>
+                        <div class="demo-panel">
+                            <h4>JVM Memory Usage</h4>
+                            <div class="demo-metric">62%</div>
+                            <div class="demo-chart">
+                                <div class="chart-bar" style="height: 62%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="demo-info">
+                        <h4>Grafana Features:</h4>
+                        <ul>
+                            <li>📊 Real-time dashboards with customizable panels</li>
+                            <li>📈 Time series visualization</li>
+                            <li>🔔 Alerting and notifications</li>
+                            <li>📉 Historical data analysis</li>
+                            <li>🎨 Customizable visualizations</li>
+                            <li>🔍 Query builder for Prometheus</li>
+                        </ul>
+                        <p class="note">
+                            <strong>Note:</strong> To use Grafana, navigate to http://localhost:3000 and configure 
+                            Prometheus as a data source. The Prometheus URL is http://prometheus:9090 (internal) 
+                            or http://localhost:9090 (external).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Tab -->
+        <div id="metrics" class="tab-content">
+            <div class="operations-section">
+                <div class="card">
+                    <h3>Service Metrics</h3>
+                    <div class="service-selector">
+                        <button onclick="getMetrics('coordinator')" class="btn btn-secondary">Coordinator</button>
+                        <button onclick="getMetrics('producer')" class="btn btn-secondary">Producer</button>
+                        <button onclick="getMetrics('consumer')" class="btn btn-secondary">Consumer</button>
+                        <button onclick="getMetrics('gateway')" class="btn btn-secondary">Gateway</button>
+                    </div>
+                    <pre id="metrics-output" class="output"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

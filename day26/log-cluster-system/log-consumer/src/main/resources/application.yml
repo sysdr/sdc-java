@@ -1,0 +1,40 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: log-consumer
+  
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: log-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/logsdb
+    username: postgres
+    password: postgres
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+cluster:
+  coordinator:
+    url: http://cluster-coordinator:8081
+  node:
+    id: ${NODE_ID:consumer-1}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
