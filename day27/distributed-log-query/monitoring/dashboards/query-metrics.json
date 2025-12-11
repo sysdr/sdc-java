@@ -1,0 +1,26 @@
+{
+  "dashboard": {
+    "title": "Distributed Query Metrics",
+    "panels": [
+      {
+        "title": "Query Latency",
+        "targets": [
+          {
+            "expr": "query_execution_time_seconds"
+          }
+        ]
+      },
+      {
+        "title": "Partitions Queried vs Pruned",
+        "targets": [
+          {
+            "expr": "query_partitions_queried_total"
+          },
+          {
+            "expr": "query_partitions_pruned_total"
+          }
+        ]
+      }
+    ]
+  }
+}

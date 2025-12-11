@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: query-coordinator
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+partition:
+  nodes:
+    - http://partition-node-1:8081
+    - http://partition-node-2:8082
+    - http://partition-node-3:8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.coordinator: INFO
+    org.springframework.web: INFO

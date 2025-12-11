@@ -1,0 +1,201 @@
+version: '3.8'
+
+services:
+  # Kafka and Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # PostgreSQL databases for each partition
+  postgres-1:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: logs_partition1
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres1-data:/var/lib/postgresql/data
+
+  postgres-2:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: logs_partition2
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres2-data:/var/lib/postgresql/data
+
+  postgres-3:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: logs_partition3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres3-data:/var/lib/postgresql/data
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Partition Nodes
+  partition-node-1:
+    build:
+      context: .
+      dockerfile: partition-node/Dockerfile
+    depends_on:
+      - kafka
+      - postgres-1
+    environment:
+      SERVER_PORT: 8081
+      DB_HOST: postgres-1
+      DB_NAME: logs_partition1
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      KAFKA_BOOTSTRAP: kafka:9092
+      PARTITION_ID: partition-1
+    ports:
+      - "8081:8081"
+
+  partition-node-2:
+    build:
+      context: .
+      dockerfile: partition-node/Dockerfile
+    depends_on:
+      - kafka
+      - postgres-2
+    environment:
+      SERVER_PORT: 8082
+      DB_HOST: postgres-2
+      DB_NAME: logs_partition2
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      KAFKA_BOOTSTRAP: kafka:9092
+      PARTITION_ID: partition-2
+    ports:
+      - "8082:8082"
+
+  partition-node-3:
+    build:
+      context: .
+      dockerfile: partition-node/Dockerfile
+    depends_on:
+      - kafka
+      - postgres-3
+    environment:
+      SERVER_PORT: 8083
+      DB_HOST: postgres-3
+      DB_NAME: logs_partition3
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      KAFKA_BOOTSTRAP: kafka:9092
+      PARTITION_ID: partition-3
+    ports:
+      - "8083:8083"
+
+  # Query Coordinator
+  query-coordinator:
+    build:
+      context: .
+      dockerfile: query-coordinator/Dockerfile
+    depends_on:
+      - redis
+      - partition-node-1
+      - partition-node-2
+      - partition-node-3
+    ports:
+      - "8080:8080"
+    environment:
+      PARTITION_NODES: http://partition-node-1:8081,http://partition-node-2:8082,http://partition-node-3:8083
+
+  # Log Producer
+  log-producer:
+    build:
+      context: .
+      dockerfile: log-producer/Dockerfile
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./monitoring/dashboards:/var/lib/grafana/dashboards
+
+  # Dashboard Server
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard-server/Dockerfile
+    depends_on:
+      - query-coordinator
+      - partition-node-1
+      - partition-node-2
+      - partition-node-3
+      - prometheus
+      - grafana
+    ports:
+      - "5000:5000"
+    environment:
+      COORDINATOR_URL: http://query-coordinator:8080
+      PARTITION_NODE_1_URL: http://partition-node-1:8081
+      PARTITION_NODE_2_URL: http://partition-node-2:8082
+      PARTITION_NODE_3_URL: http://partition-node-3:8083
+      PROMETHEUS_URL: http://prometheus:9090
+      GRAFANA_URL: http://grafana:3000
+      EXTERNAL_COORDINATOR_URL: http://localhost:8080
+      EXTERNAL_PARTITION_1_URL: http://localhost:8081
+      EXTERNAL_PARTITION_2_URL: http://localhost:8082
+      EXTERNAL_PARTITION_3_URL: http://localhost:8083
+      EXTERNAL_PROMETHEUS_URL: http://localhost:9090
+      EXTERNAL_GRAFANA_URL: http://localhost:3000
+
+volumes:
+  postgres1-data:
+  postgres2-data:
+  postgres3-data:
+  prometheus-data:
+  grafana-data:

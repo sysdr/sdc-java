@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Log Query System - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📊 Distributed Log Query System</h1>
+            <p class="subtitle">Production-Ready Scatter-Gather Query System with Intelligent Partition Pruning</p>
+        </header>
+
+        <!-- System Overview -->
+        <section class="section">
+            <h2>🏗️ System Overview</h2>
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <h3>Query Coordinator</h3>
+                    <p>Routes queries, merges results</p>
+                    <a href="{{ coordinator_url }}" target="_blank" class="link">{{ coordinator_url }}</a>
+                    <div id="coordinator-health" class="health-status">Checking...</div>
+                </div>
+                <div class="overview-card">
+                    <h3>Partition Nodes</h3>
+                    <p>3 nodes storing logs locally</p>
+                    <div class="partition-links">
+                        <a href="{{ partition1_url }}" target="_blank" class="link">Node 1</a>
+                        <a href="{{ partition2_url }}" target="_blank" class="link">Node 2</a>
+                        <a href="{{ partition3_url }}" target="_blank" class="link">Node 3</a>
+                    </div>
+                    <div id="partitions-health" class="health-status">Checking...</div>
+                </div>
+                <div class="overview-card">
+                    <h3>Monitoring</h3>
+                    <p>Prometheus & Grafana</p>
+                    <a href="{{ prometheus_url }}" target="_blank" class="link">Prometheus</a>
+                    <a href="{{ grafana_url }}" target="_blank" class="link">Grafana</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Statistics -->
+        <section class="section">
+            <h2>📈 System Statistics</h2>
+            <button onclick="loadStats()" class="btn btn-secondary">Refresh Statistics</button>
+            <div id="stats-content" class="stats-grid"></div>
+        </section>
+
+        <!-- Partition Metadata -->
+        <section class="section">
+            <h2>🗂️ Partition Metadata</h2>
+            <div class="metadata-grid">
+                <div class="metadata-card">
+                    <h3>Partition 1</h3>
+                    <button onclick="loadMetadata(1)" class="btn btn-small">Load Metadata</button>
+                    <div id="metadata-1" class="metadata-content"></div>
+                </div>
+                <div class="metadata-card">
+                    <h3>Partition 2</h3>
+                    <button onclick="loadMetadata(2)" class="btn btn-small">Load Metadata</button>
+                    <div id="metadata-2" class="metadata-content"></div>
+                </div>
+                <div class="metadata-card">
+                    <h3>Partition 3</h3>
+                    <button onclick="loadMetadata(3)" class="btn btn-small">Load Metadata</button>
+                    <div id="metadata-3" class="metadata-content"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Prometheus Demo -->
+        <section class="section">
+            <h2>📊 Prometheus Demo Operations</h2>
+            <div class="demo-info-box">
+                <p><strong>Prometheus</strong> is a monitoring and alerting toolkit that collects metrics from your services.</p>
+                <p><strong>How it works:</strong> Prometheus scrapes metrics from the query coordinator and partition nodes at regular intervals, storing them in a time-series database.</p>
+                <a href="{{ prometheus_url }}" target="_blank" class="btn btn-primary">Open Prometheus UI</a>
+            </div>
+            
+            <div class="query-operations">
+                <h3>Interactive Query Execution</h3>
+                <div class="query-form-container">
+                    <div class="form-group">
+                        <label>Enter Prometheus Query (PromQL):</label>
+                        <textarea id="prometheus-query-input" class="form-input query-textarea" rows="3" placeholder="e.g., rate(query_execution_time_seconds_count[5m])"></textarea>
+                    </div>
+                    <div class="query-actions">
+                        <button onclick="executePrometheusQuery()" class="btn btn-primary">Execute Query</button>
+                        <button onclick="executePrometheusRangeQuery()" class="btn btn-secondary">Execute Range Query (Graph)</button>
+                        <select id="example-queries" class="form-input" style="width: auto; display: inline-block; margin-left: 1rem;" onchange="loadExampleQuery(this.value)">
+                            <option value="">Select Example Query...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="prometheus-results" class="query-results-container" style="display: none;">
+                    <h4>Query Results</h4>
+                    <div id="prometheus-metrics" class="metrics-display"></div>
+                    <div id="prometheus-chart-container" style="margin-top: 2rem;">
+                        <canvas id="prometheus-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="example-queries-section">
+                    <h4>Example Queries - Click Execute to See Metrics & Graph</h4>
+                    <div id="prometheus-queries" class="queries-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grafana Demo -->
+        <section class="section">
+            <h2>📈 Grafana Demo Operations</h2>
+            <div class="demo-info-box">
+                <p><strong>Grafana</strong> is a visualization and analytics platform that creates dashboards from Prometheus metrics.</p>
+                <p><strong>How it works:</strong> Grafana connects to Prometheus as a data source and allows you to create beautiful visualizations of your metrics.</p>
+                <a href="{{ grafana_url }}" target="_blank" class="btn btn-primary">Open Grafana UI</a>
+                <p class="login-info">Login: admin / admin</p>
+            </div>
+            
+            <div class="grafana-demo-operations">
+                <h3>Dashboard Panel Demos</h3>
+                <p>Click on any panel below to see a live demo visualization:</p>
+                <div id="grafana-panels" class="panels-list"></div>
+                
+                <div id="grafana-panel-results" class="panel-results-container" style="display: none;">
+                    <h4 id="panel-results-title"></h4>
+                    <div id="grafana-panel-metrics" class="metrics-display"></div>
+                    <div id="grafana-panel-chart-container" style="margin-top: 2rem;">
+                        <canvas id="grafana-panel-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Diagram -->
+        <section class="section">
+            <h2>🏛️ System Architecture</h2>
+            <div class="architecture-diagram">
+                <div class="arch-flow">
+                    <div class="arch-box client">Client</div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box coordinator">Query Coordinator<br/>(Port 8080)</div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box partitions">
+                        <div>Partition Node 1<br/>(Port 8081)</div>
+                        <div>Partition Node 2<br/>(Port 8082)</div>
+                        <div>Partition Node 3<br/>(Port 8083)</div>
+                    </div>
+                </div>
+                <div class="arch-storage">
+                    <div class="arch-box">PostgreSQL<br/>(3 databases)</div>
+                    <div class="arch-box">Redis<br/>(Caching)</div>
+                    <div class="arch-box">Kafka<br/>(Log Ingestion)</div>
+                </div>
+                <div class="arch-monitoring">
+                    <div class="arch-box">Prometheus<br/>(Metrics)</div>
+                    <div class="arch-box">Grafana<br/>(Visualization)</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+
