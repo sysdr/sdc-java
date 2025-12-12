@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quorum Log Storage - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script>
+        // Ensure date adapter is registered
+        if (typeof Chart !== 'undefined' && Chart.register) {
+            Chart.register(Chart._adapters._date.adapters.dateFns || {});
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quorum-Based Log Storage System</h1>
+            <p class="subtitle">Production-Ready Distributed Storage with Configurable Consistency</p>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot"></span>
+                <span id="statusText">Checking services...</span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="overview">System Overview</button>
+            <button class="tab-btn" data-tab="operations">Operations</button>
+            <button class="tab-btn" data-tab="prometheus">Prometheus</button>
+            <button class="tab-btn" data-tab="grafana">Grafana</button>
+        </nav>
+
+        <!-- System Overview Tab -->
+        <div class="tab-content active" id="overview">
+            <section class="card">
+                <h2>System Architecture</h2>
+                <div class="architecture-diagram">
+                    <div class="component">
+                        <div class="component-icon">🌐</div>
+                        <h3>API Gateway</h3>
+                        <p>Port: 8080</p>
+                        <p>Public REST API</p>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="component">
+                        <div class="component-icon">⚖️</div>
+                        <h3>Quorum Coordinator</h3>
+                        <p>Port: 8082</p>
+                        <p>W+R>N Protocol</p>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="component-group">
+                        <div class="component small">
+                            <div class="component-icon">💾</div>
+                            <h4>Node 1</h4>
+                            <p>8081</p>
+                        </div>
+                        <div class="component small">
+                            <div class="component-icon">💾</div>
+                            <h4>Node 2</h4>
+                            <p>8091</p>
+                        </div>
+                        <div class="component small">
+                            <div class="component-icon">💾</div>
+                            <h4>Node 3</h4>
+                            <p>8092</p>
+                        </div>
+                        <div class="component small">
+                            <div class="component-icon">💾</div>
+                            <h4>Node 4</h4>
+                            <p>8093</p>
+                        </div>
+                        <div class="component small">
+                            <div class="component-icon">💾</div>
+                            <h4>Node 5</h4>
+                            <p>8094</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Consistency Levels</h2>
+                <div class="consistency-levels">
+                    <div class="level-card">
+                        <h3>ONE</h3>
+                        <p class="latency">~5ms</p>
+                        <p>Single replica write</p>
+                        <p class="use-case">High throughput, eventual consistency</p>
+                    </div>
+                    <div class="level-card">
+                        <h3>QUORUM</h3>
+                        <p class="latency">~15ms</p>
+                        <p>Majority of replicas (3/5)</p>
+                        <p class="use-case">Balanced production workloads</p>
+                    </div>
+                    <div class="level-card">
+                        <h3>ALL</h3>
+                        <p class="latency">~50ms</p>
+                        <p>All replicas (5/5)</p>
+                        <p class="use-case">Critical data, strong consistency</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Service Status</h2>
+                <div class="service-status" id="serviceStatus">
+                    <div class="service-item">
+                        <span class="service-name">API Gateway</span>
+                        <span class="service-status-indicator" id="apiGatewayStatus">Checking...</span>
+                    </div>
+                    <div class="service-item">
+                        <span class="service-name">Prometheus</span>
+                        <span class="service-status-indicator" id="prometheusStatus">Checking...</span>
+                    </div>
+                    <div class="service-item">
+                        <span class="service-name">Grafana</span>
+                        <span class="service-status-indicator" id="grafanaStatus">Checking...</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Operations Tab -->
+        <div class="tab-content" id="operations">
+            <section class="card">
+                <h2>Write Operation</h2>
+                <div class="operation-form">
+                    <div class="form-group">
+                        <label>Key:</label>
+                        <input type="text" id="writeKey" placeholder="e.g., user-123" value="test-key-1">
+                    </div>
+                    <div class="form-group">
+                        <label>Value:</label>
+                        <input type="text" id="writeValue" placeholder="e.g., session-data" value="test-value">
+                    </div>
+                    <div class="form-group">
+                        <label>Consistency Level:</label>
+                        <select id="writeConsistency">
+                            <option value="ONE">ONE (Fast, ~5ms)</option>
+                            <option value="QUORUM" selected>QUORUM (Balanced, ~15ms)</option>
+                            <option value="ALL">ALL (Strong, ~50ms)</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="performWrite()">Write</button>
+                </div>
+                <div class="result-box" id="writeResult"></div>
+            </section>
+
+            <section class="card">
+                <h2>Read Operation</h2>
+                <div class="operation-form">
+                    <div class="form-group">
+                        <label>Key:</label>
+                        <input type="text" id="readKey" placeholder="e.g., user-123" value="test-key-1">
+                    </div>
+                    <div class="form-group">
+                        <label>Consistency Level:</label>
+                        <select id="readConsistency">
+                            <option value="ONE">ONE (Fast, might be stale)</option>
+                            <option value="QUORUM" selected>QUORUM (Balanced)</option>
+                            <option value="ALL">ALL (Strongly consistent)</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="performRead()">Read</button>
+                </div>
+                <div class="result-box" id="readResult"></div>
+            </section>
+
+            <section class="card">
+                <h2>Operation History</h2>
+                <div class="history-list" id="operationHistory"></div>
+            </section>
+        </div>
+
+        <!-- Prometheus Tab -->
+        <div class="tab-content" id="prometheus">
+            <section class="card">
+                <h2>Prometheus Query Explorer</h2>
+                <div class="query-section">
+                    <div class="form-group">
+                        <label>Query:</label>
+                        <select id="querySelector" onchange="loadQuery()">
+                            <option value="">Select a predefined query...</option>
+                            <option value="requestRate">Request Rate (req/s)</option>
+                            <option value="writeLatency">Write Latency (ms)</option>
+                            <option value="readLatency">Read Latency (ms)</option>
+                            <option value="errorRate">Error Rate (errors/s)</option>
+                            <option value="successRate">Success Rate (%)</option>
+                            <option value="quorumOperations">Quorum Operations (ops/s)</option>
+                            <option value="quorumLatency">Quorum Latency (ms)</option>
+                            <option value="circuitBreakerState">Circuit Breaker State</option>
+                            <option value="storageNodeRequests">Storage Node Requests (req/s)</option>
+                            <option value="jvmMemory">JVM Memory Usage (%)</option>
+                            <option value="totalThroughput">Total Throughput (ops/s)</option>
+                            <option value="activeNodes">Active Storage Nodes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Custom Query (PromQL):</label>
+                        <textarea id="customQuery" rows="3" placeholder="Enter PromQL query..."></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="executeQuery()">Execute Query</button>
+                        <button class="btn-secondary" onclick="executeQueryRange()">Query Range (Graph)</button>
+                    </div>
+                </div>
+                <div class="result-box" id="queryResult"></div>
+            </section>
+
+            <section class="card">
+                <h2>Query Results Graph</h2>
+                <canvas id="queryChart"></canvas>
+            </section>
+
+            <section class="card">
+                <h2>Common Prometheus Queries</h2>
+                <div class="query-examples">
+                    <div class="query-example">
+                        <h4>Request Rate</h4>
+                        <code>rate(http_server_requests_seconds_count{job="api-gateway"}[5m])</code>
+                        <button class="btn-small" onclick="loadExampleQuery(this)">Use</button>
+                    </div>
+                    <div class="query-example">
+                        <h4>Write Latency (P95)</h4>
+                        <code>histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="api-gateway", uri="/api/logs", method="POST"}[5m])) * 1000</code>
+                        <button class="btn-small" onclick="loadExampleQuery(this)">Use</button>
+                    </div>
+                    <div class="query-example">
+                        <h4>Error Rate</h4>
+                        <code>rate(http_server_requests_seconds_count{job="api-gateway", status=~"4..|5.."}[5m])</code>
+                        <button class="btn-small" onclick="loadExampleQuery(this)">Use</button>
+                    </div>
+                    <div class="query-example">
+                        <h4>Quorum Success Rate</h4>
+                        <code>(rate(http_server_requests_seconds_count{job="quorum-coordinator", status="200"}[5m]) / rate(http_server_requests_seconds_count{job="quorum-coordinator"}[5m])) * 100</code>
+                        <button class="btn-small" onclick="loadExampleQuery(this)">Use</button>
+                    </div>
+                    <div class="query-example">
+                        <h4>Circuit Breaker State</h4>
+                        <code>resilience4j_circuitbreaker_state{job="quorum-coordinator", name="storageNode"}</code>
+                        <button class="btn-small" onclick="loadExampleQuery(this)">Use</button>
+                    </div>
+                    <div class="query-example">
+                        <h4>JVM Memory Usage</h4>
+                        <code>(jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100</code>
+                        <button class="btn-small" onclick="loadExampleQuery(this)">Use</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Grafana Tab -->
+        <div class="tab-content" id="grafana">
+            <section class="card">
+                <h2>Grafana Integration</h2>
+                <div class="grafana-info">
+                    <p>Grafana provides advanced visualization and dashboard capabilities for monitoring the Quorum Log Storage system.</p>
+                    <div class="grafana-links">
+                        <a href="http://localhost:3000" target="_blank" class="btn-primary">Open Grafana</a>
+                        <p class="credentials">Credentials: admin / admin</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Grafana Dashboard Panels</h2>
+                <div class="grafana-panels">
+                    <div class="panel-info">
+                        <h3>Panel 1: Request Rate Over Time</h3>
+                        <p>Shows request rate (requests/sec) for all API Gateway endpoints</p>
+                        <code>rate(http_server_requests_seconds_count{job="api-gateway"}[5m])</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 2: Write Latency (Average)</h3>
+                        <p>Average write latency in milliseconds</p>
+                        <code>rate(http_server_requests_seconds_sum{job="api-gateway", uri="/api/logs", method="POST"}[5m]) / rate(http_server_requests_seconds_count{job="api-gateway", uri="/api/logs", method="POST"}[5m]) * 1000</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 3: Read Latency (Average)</h3>
+                        <p>Average read latency in milliseconds</p>
+                        <code>rate(http_server_requests_seconds_sum{job="api-gateway", uri=~"/api/logs/.*", method="GET"}[5m]) / rate(http_server_requests_seconds_count{job="api-gateway", uri=~"/api/logs/.*", method="GET"}[5m]) * 1000</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 4: Latency Percentiles</h3>
+                        <p>P50, P95, P99 latency percentiles for write operations</p>
+                        <code>histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="api-gateway", uri="/api/logs", method="POST"}[5m])) * 1000</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 5: Error Rate</h3>
+                        <p>Error rate (4xx and 5xx responses) per second</p>
+                        <code>rate(http_server_requests_seconds_count{job="api-gateway", status=~"4..|5.."}[5m])</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 6: Success Rate</h3>
+                        <p>Percentage of successful requests (2xx)</p>
+                        <code>(rate(http_server_requests_seconds_count{job="api-gateway", status=~"2.."}[5m]) / rate(http_server_requests_seconds_count{job="api-gateway"}[5m])) * 100</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 7: Quorum Operations Rate</h3>
+                        <p>Rate of quorum write and read operations</p>
+                        <code>rate(http_server_requests_seconds_count{job="quorum-coordinator", uri=~"/quorum/(write|read)"}[5m])</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 8: Circuit Breaker State</h3>
+                        <p>State of circuit breaker (0=closed, 1=open, 2=half-open)</p>
+                        <code>resilience4j_circuitbreaker_state{job="quorum-coordinator", name="storageNode"}</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 9: Storage Node Health</h3>
+                        <p>Health percentage for each storage node</p>
+                        <code>(rate(http_server_requests_seconds_count{job="storage-nodes", status="200"}[5m]) / rate(http_server_requests_seconds_count{job="storage-nodes"}[5m])) * 100</code>
+                    </div>
+                    <div class="panel-info">
+                        <h3>Panel 10: JVM Heap Memory</h3>
+                        <p>JVM heap memory usage percentage for all services</p>
+                        <code>(jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100</code>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Grafana Alert Rules</h2>
+                <div class="alert-rules">
+                    <div class="alert-rule">
+                        <h4>High Error Rate</h4>
+                        <p>Alert when error rate exceeds 5%</p>
+                        <code>(rate(http_server_requests_seconds_count{job="api-gateway", status=~"4..|5.."}[5m]) / rate(http_server_requests_seconds_count{job="api-gateway"}[5m])) * 100 > 5</code>
+                    </div>
+                    <div class="alert-rule">
+                        <h4>High Latency</h4>
+                        <p>Alert when P95 latency exceeds 1000ms</p>
+                        <code>histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="api-gateway"}[5m])) * 1000 > 1000</code>
+                    </div>
+                    <div class="alert-rule">
+                        <h4>Circuit Breaker Open</h4>
+                        <p>Alert when circuit breaker is open</p>
+                        <code>resilience4j_circuitbreaker_state{job="quorum-coordinator", name="storageNode"} == 1</code>
+                    </div>
+                    <div class="alert-rule">
+                        <h4>Storage Node Down</h4>
+                        <p>Alert when a storage node is down</p>
+                        <code>up{job="storage-nodes"} == 0</code>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

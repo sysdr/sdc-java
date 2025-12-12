@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "title": "Quorum Log Storage Metrics",
+    "panels": [
+      {
+        "title": "Write Latency by Consistency Level",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_sum{uri=\"/quorum/write\"}[5m])"
+          }
+        ]
+      },
+      {
+        "title": "Read Latency by Consistency Level",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_sum{uri=\"/quorum/read\"}[5m])"
+          }
+        ]
+      },
+      {
+        "title": "Quorum Success Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{status=\"200\"}[5m])"
+          }
+        ]
+      }
+    ]
+  }
+}

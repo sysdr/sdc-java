@@ -1,0 +1,274 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for storage nodes
+  postgres-1:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: storagedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-1-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-2:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: storagedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-2-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-3:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: storagedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-3-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-4:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: storagedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-4-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-5:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: storagedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-5-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Storage Node Replicas
+  storage-node-1:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8081
+      NODE_ID: node-1
+      DB_HOST: postgres-1
+      DB_NAME: storagedb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  storage-node-2:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8081
+      NODE_ID: node-2
+      DB_HOST: postgres-2
+      DB_NAME: storagedb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8091:8081"
+    depends_on:
+      postgres-2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  storage-node-3:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8081
+      NODE_ID: node-3
+      DB_HOST: postgres-3
+      DB_NAME: storagedb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8092:8081"
+    depends_on:
+      postgres-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  storage-node-4:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8081
+      NODE_ID: node-4
+      DB_HOST: postgres-4
+      DB_NAME: storagedb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8093:8081"
+    depends_on:
+      postgres-4:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  storage-node-5:
+    build:
+      context: .
+      dockerfile: storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8081
+      NODE_ID: node-5
+      DB_HOST: postgres-5
+      DB_NAME: storagedb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8094:8081"
+    depends_on:
+      postgres-5:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Quorum Coordinator
+  quorum-coordinator:
+    build:
+      context: .
+      dockerfile: quorum-coordinator/Dockerfile
+    environment:
+      SERVER_PORT: 8082
+    ports:
+      - "8082:8082"
+    depends_on:
+      storage-node-1:
+        condition: service_healthy
+      storage-node-2:
+        condition: service_healthy
+      storage-node-3:
+        condition: service_healthy
+      storage-node-4:
+        condition: service_healthy
+      storage-node-5:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    environment:
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      quorum-coordinator:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./monitoring/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres-1-data:
+  postgres-2-data:
+  postgres-3-data:
+  postgres-4-data:
+  postgres-5-data:
+  prometheus-data:
+  grafana-data:
