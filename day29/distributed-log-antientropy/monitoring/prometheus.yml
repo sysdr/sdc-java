@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'storage-nodes'
+    static_configs:
+      - targets: ['node1:8081', 'node2:8082', 'node3:8083']
+  
+  - job_name: 'merkle-tree-service'
+    static_configs:
+      - targets: ['merkle-tree-service:8084']
+  
+  - job_name: 'anti-entropy-coordinator'
+    static_configs:
+      - targets: ['anti-entropy-coordinator:8085']
+  
+  - job_name: 'read-repair-service'
+    static_configs:
+      - targets: ['read-repair-service:8086']
+  
+  - job_name: 'hint-manager'
+    static_configs:
+      - targets: ['hint-manager:8087']
+  
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8080']

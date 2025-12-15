@@ -1,0 +1,190 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  node1:
+    build:
+      context: .
+      dockerfile: ./log-storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8081
+      NODE_ID: node1
+      DB_HOST: postgres
+      DB_NAME: logdb
+      REDIS_HOST: redis
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - redis
+
+  node2:
+    build:
+      context: .
+      dockerfile: ./log-storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8082
+      NODE_ID: node2
+      DB_HOST: postgres
+      DB_NAME: logdb
+      REDIS_HOST: redis
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - redis
+
+  node3:
+    build:
+      context: .
+      dockerfile: ./log-storage-node/Dockerfile
+    environment:
+      SERVER_PORT: 8083
+      NODE_ID: node3
+      DB_HOST: postgres
+      DB_NAME: logdb
+      REDIS_HOST: redis
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - redis
+
+  merkle-tree-service:
+    build:
+      context: .
+      dockerfile: ./merkle-tree-service/Dockerfile
+    environment:
+      REDIS_HOST: redis
+      STORAGE_NODES: http://node1:8081,http://node2:8082,http://node3:8083
+    ports:
+      - "8084:8084"
+    depends_on:
+      - redis
+      - node1
+      - node2
+      - node3
+
+  anti-entropy-coordinator:
+    build:
+      context: .
+      dockerfile: ./anti-entropy-coordinator/Dockerfile
+    environment:
+      DB_HOST: postgres
+      STORAGE_NODES: http://node1:8081,http://node2:8082,http://node3:8083
+      MERKLE_SERVICE_URL: http://merkle-tree-service:8084
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+      - merkle-tree-service
+
+  read-repair-service:
+    build:
+      context: .
+      dockerfile: ./read-repair-service/Dockerfile
+    environment:
+      STORAGE_NODES: http://node1:8081,http://node2:8082,http://node3:8083
+    ports:
+      - "8086:8086"
+    depends_on:
+      - node1
+      - node2
+      - node3
+
+  hint-manager:
+    build:
+      context: .
+      dockerfile: ./hint-manager/Dockerfile
+    environment:
+      DB_HOST: postgres
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    environment:
+      STORAGE_NODES: http://node1:8081,http://node2:8082,http://node3:8083
+      READ_REPAIR_SERVICE_URL: http://read-repair-service:8086
+    ports:
+      - "8080:8080"
+    depends_on:
+      - read-repair-service
+      - node1
+      - node2
+      - node3
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
+      - ./monitoring/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: ./dashboard-service/Dockerfile
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8080
+      NODE1_URL: http://node1:8081
+      NODE2_URL: http://node2:8082
+      NODE3_URL: http://node3:8083
+      MERKLE_TREE_URL: http://merkle-tree-service:8084
+      COORDINATOR_URL: http://anti-entropy-coordinator:8085
+      READ_REPAIR_URL: http://read-repair-service:8086
+      HINT_MANAGER_URL: http://hint-manager:8087
+      PROMETHEUS_URL: http://prometheus:9090
+      GRAFANA_URL: http://grafana:3000
+    ports:
+      - "8088:8088"
+    depends_on:
+      - api-gateway
+      - node1
+      - node2
+      - node3
+      - merkle-tree-service
+      - anti-entropy-coordinator
+      - read-repair-service
+      - hint-manager
+      - prometheus
+      - grafana
+
+volumes:
+  postgres-data:
+  grafana-data:

@@ -1,0 +1,29 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: merkle-tree-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+
+storage:
+  nodes: ${STORAGE_NODES:http://node1:8081,http://node2:8082,http://node3:8083}
+
+merkle:
+  tree:
+    depth: 10
+  segment:
+    size: 1000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

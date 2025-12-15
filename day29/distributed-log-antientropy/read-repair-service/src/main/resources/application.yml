@@ -1,0 +1,19 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: read-repair-service
+
+storage:
+  nodes: ${STORAGE_NODES:http://node1:8081,http://node2:8082,http://node3:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

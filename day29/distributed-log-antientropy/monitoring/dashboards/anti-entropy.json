@@ -1,0 +1,29 @@
+{
+  "dashboard": {
+    "title": "Anti-Entropy Metrics",
+    "panels": [
+      {
+        "title": "Reconciliation Jobs",
+        "targets": [
+          {"expr": "rate(reconciliation_jobs_scheduled_total[5m])"},
+          {"expr": "rate(reconciliation_jobs_completed_total[5m])"}
+        ]
+      },
+      {
+        "title": "Read Repairs",
+        "targets": [
+          {"expr": "rate(read_repairs_triggered_total[5m])"},
+          {"expr": "rate(read_repairs_completed_total[5m])"}
+        ]
+      },
+      {
+        "title": "Hints",
+        "targets": [
+          {"expr": "hints_pending"},
+          {"expr": "rate(hints_delivered_total[5m])"},
+          {"expr": "rate(hints_expired_total[5m])"}
+        ]
+      }
+    ]
+  }
+}

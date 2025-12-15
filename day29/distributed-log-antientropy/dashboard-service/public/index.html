@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Log Anti-Entropy Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Distributed Log Anti-Entropy System</h1>
+            <p class="subtitle">Real-time Monitoring & Operations Dashboard</p>
+        </header>
+
+        <!-- System Health Section -->
+        <section class="section health-section">
+            <h2>System Health</h2>
+            <div id="health-status" class="health-grid"></div>
+            <button onclick="refreshHealth()" class="btn btn-primary">Refresh Health</button>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="section stats-section">
+            <h2>System Statistics</h2>
+            <div id="stats-display" class="stats-grid"></div>
+        </section>
+
+        <!-- Operations Section -->
+        <section class="section operations-section">
+            <h2>Operations</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('write')">Write Log</button>
+                <button class="tab-btn" onclick="showTab('read')">Read Log</button>
+                <button class="tab-btn" onclick="showTab('merkle')">Merkle Tree</button>
+                <button class="tab-btn" onclick="showTab('coordinator')">Coordinator</button>
+                <button class="tab-btn" onclick="showTab('hints')">Hint Manager</button>
+                <button class="tab-btn" onclick="showTab('storage')">Storage Nodes</button>
+            </div>
+
+            <!-- Write Operation -->
+            <div id="write-tab" class="tab-content active">
+                <div class="operation-card">
+                    <h3>Write Log Entry</h3>
+                    <form id="write-form" onsubmit="executeWrite(event)">
+                        <div class="form-group">
+                            <label>Partition ID:</label>
+                            <input type="text" id="write-partition" placeholder="e.g., partition-1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Message:</label>
+                            <textarea id="write-message" placeholder="Enter log message" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Write</button>
+                    </form>
+                    <div id="write-result" class="result-box"></div>
+                </div>
+            </div>
+
+            <!-- Read Operation -->
+            <div id="read-tab" class="tab-content">
+                <div class="operation-card">
+                    <h3>Read Log Entry</h3>
+                    <form id="read-form" onsubmit="executeRead(event)">
+                        <div class="form-group">
+                            <label>Partition ID:</label>
+                            <input type="text" id="read-partition" placeholder="e.g., partition-1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Version:</label>
+                            <input type="number" id="read-version" placeholder="e.g., 1" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Read</button>
+                    </form>
+                    <div id="read-result" class="result-box"></div>
+                </div>
+            </div>
+
+            <!-- Merkle Tree Operations -->
+            <div id="merkle-tab" class="tab-content">
+                <div class="operation-card">
+                    <h3>Build Merkle Tree</h3>
+                    <form id="merkle-build-form" onsubmit="executeMerkleBuild(event)">
+                        <div class="form-group">
+                            <label>Partition ID:</label>
+                            <input type="text" id="merkle-build-partition" placeholder="e.g., partition-1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Node URL:</label>
+                            <select id="merkle-build-node">
+                                <option value="http://node1:8081">Node 1</option>
+                                <option value="http://node2:8082">Node 2</option>
+                                <option value="http://node3:8083">Node 3</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Build Tree</button>
+                    </form>
+                    <div id="merkle-build-result" class="result-box"></div>
+                </div>
+
+                <div class="operation-card">
+                    <h3>Compare Merkle Trees</h3>
+                    <form id="merkle-compare-form" onsubmit="executeMerkleCompare(event)">
+                        <div class="form-group">
+                            <label>Partition ID:</label>
+                            <input type="text" id="merkle-compare-partition" placeholder="e.g., partition-1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Node 1:</label>
+                            <select id="merkle-compare-node1">
+                                <option value="http://node1:8081">Node 1</option>
+                                <option value="http://node2:8082">Node 2</option>
+                                <option value="http://node3:8083">Node 3</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Node 2:</label>
+                            <select id="merkle-compare-node2">
+                                <option value="http://node2:8082">Node 2</option>
+                                <option value="http://node1:8081">Node 1</option>
+                                <option value="http://node3:8083">Node 3</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Compare Trees</button>
+                    </form>
+                    <div id="merkle-compare-result" class="result-box"></div>
+                </div>
+            </div>
+
+            <!-- Coordinator Operations -->
+            <div id="coordinator-tab" class="tab-content">
+                <div class="operation-card">
+                    <h3>Reconciliation Jobs</h3>
+                    <div class="form-group">
+                        <label>Filter by Status:</label>
+                        <select id="job-status-filter" onchange="loadJobs()">
+                            <option value="">All</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="RUNNING">Running</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="FAILED">Failed</option>
+                        </select>
+                    </div>
+                    <button onclick="loadJobs()" class="btn btn-primary">Load Jobs</button>
+                    <button onclick="triggerReconciliation()" class="btn btn-success">Trigger Reconciliation</button>
+                    <div id="jobs-result" class="result-box"></div>
+                </div>
+            </div>
+
+            <!-- Hint Manager Operations -->
+            <div id="hints-tab" class="tab-content">
+                <div class="operation-card">
+                    <h3>Hint Manager</h3>
+                    <button onclick="loadHintStats()" class="btn btn-primary">Load Statistics</button>
+                    <button onclick="loadPendingHints()" class="btn btn-primary">Load Pending Hints</button>
+                    <div id="hints-result" class="result-box"></div>
+                </div>
+            </div>
+
+            <!-- Storage Node Operations -->
+            <div id="storage-tab" class="tab-content">
+                <div class="operation-card">
+                    <h3>Direct Storage Node Access</h3>
+                    <form id="storage-read-form" onsubmit="executeStorageRead(event)">
+                        <div class="form-group">
+                            <label>Node:</label>
+                            <select id="storage-node" required>
+                                <option value="1">Node 1</option>
+                                <option value="2">Node 2</option>
+                                <option value="3">Node 3</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Partition ID:</label>
+                            <input type="text" id="storage-partition" placeholder="e.g., partition-1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Version (leave empty for latest):</label>
+                            <input type="number" id="storage-version" placeholder="Optional">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Read from Node</button>
+                    </form>
+                    <div id="storage-result" class="result-box"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monitoring Section -->
+        <section class="section monitoring-section">
+            <h2>Monitoring & Metrics</h2>
+            
+            <div class="monitoring-tabs">
+                <button class="monitoring-tab-btn active" onclick="showMonitoringTab('prometheus')">Prometheus</button>
+                <button class="monitoring-tab-btn" onclick="showMonitoringTab('grafana')">Grafana</button>
+                <button class="monitoring-tab-btn" onclick="showMonitoringTab('queries')">Prometheus Queries</button>
+            </div>
+
+            <div id="prometheus-tab" class="monitoring-tab-content active">
+                <div class="iframe-container">
+                    <iframe id="prometheus-iframe" src="http://localhost:9090" frameborder="0" class="monitoring-iframe"></iframe>
+                </div>
+                <p style="margin-top: 10px; color: #7f8c8d;">
+                    <a href="http://localhost:9090" target="_blank" style="color: #3498db;">Open Prometheus in new tab</a>
+                </p>
+            </div>
+
+            <div id="grafana-tab" class="monitoring-tab-content">
+                <div class="iframe-container">
+                    <iframe id="grafana-iframe" src="http://localhost:3000" frameborder="0" class="monitoring-iframe"></iframe>
+                </div>
+                <p style="margin-top: 10px; color: #7f8c8d;">
+                    <a href="http://localhost:3000" target="_blank" style="color: #3498db;">Open Grafana in new tab</a> (Login: admin/admin)
+                </p>
+            </div>
+
+            <div id="queries-tab" class="monitoring-tab-content">
+                <div class="operation-card">
+                    <h3>Prometheus Query</h3>
+                    <form id="prometheus-query-form" onsubmit="executePrometheusQuery(event)">
+                        <div class="form-group">
+                            <label>Query:</label>
+                            <input type="text" id="prometheus-query" placeholder="e.g., rate(reconciliation_jobs_completed_total[5m])" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Execute Query</button>
+                    </form>
+                    <div id="prometheus-query-result" class="result-box"></div>
+                </div>
+
+                <div class="operation-card">
+                    <h3>Common Queries</h3>
+                    <div class="query-buttons">
+                        <button onclick="runCommonQuery('rate(reconciliation_jobs_completed_total[5m])')" class="btn btn-secondary">Reconciliation Rate</button>
+                        <button onclick="runCommonQuery('rate(read_repairs_triggered_total[5m])')" class="btn btn-secondary">Read Repair Rate</button>
+                        <button onclick="runCommonQuery('hints_pending')" class="btn btn-secondary">Pending Hints</button>
+                        <button onclick="runCommonQuery('merkle_tree_comparisons_total')" class="btn btn-secondary">Merkle Comparisons</button>
+                        <button onclick="runCommonQuery('storage_writes_total')" class="btn btn-secondary">Storage Writes</button>
+                        <button onclick="runCommonQuery('storage_reads_total')" class="btn btn-secondary">Storage Reads</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

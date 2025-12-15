@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+storage:
+  nodes: ${STORAGE_NODES:http://node1:8081,http://node2:8082,http://node3:8083}
+
+read:
+  repair:
+    service:
+      url: ${READ_REPAIR_SERVICE_URL:http://read-repair-service:8086}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
