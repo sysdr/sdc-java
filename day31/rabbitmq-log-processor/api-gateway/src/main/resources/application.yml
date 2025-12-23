@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+services:
+  log-producer:
+    url: http://log-producer:8081
+
+server:
+  port: 8080
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      logProducer:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+  ratelimiter:
+    instances:
+      logRateLimiter:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0s
+      batchRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics,info,circuitbreakers
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.logprocessor: DEBUG

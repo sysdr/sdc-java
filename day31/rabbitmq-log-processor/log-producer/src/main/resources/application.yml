@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: log-producer
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    connection-timeout: 10000
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        multiplier: 2.0
+        max-interval: 10000
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics,info
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.example.logprocessor: DEBUG
+    org.springframework.amqp: INFO

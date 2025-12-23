@@ -1,0 +1,85 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+*.log.*
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# IDE - Eclipse
+.settings/
+.project
+.classpath
+.factorypath
+.buildpath
+bin/
+.metadata
+
+# IDE - VS Code
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# Editor
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Application specific
+application-local.yml
+application-local.properties
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
