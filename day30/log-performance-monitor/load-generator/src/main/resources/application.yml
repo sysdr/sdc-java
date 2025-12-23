@@ -1,0 +1,11 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: load-generator
+
+logging:
+  level:
+    com.example.loadgen: INFO
+    org.springframework: WARN

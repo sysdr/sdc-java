@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <style>
+      .title-text { font: bold 24px sans-serif; fill: #1a1a1a; }
+      .subtitle-text { font: 16px sans-serif; fill: #666; }
+      .component-box { fill: #f8f9fa; stroke: #2c3e50; stroke-width: 2; }
+      .service-box { fill: #e3f2fd; stroke: #1976d2; stroke-width: 2; }
+      .infra-box { fill: #fff3e0; stroke: #f57c00; stroke-width: 2; }
+      .monitor-box { fill: #f3e5f5; stroke: #7b1fa2; stroke-width: 2; }
+      .component-text { font: 14px sans-serif; fill: #1a1a1a; }
+      .metric-text { font: 12px sans-serif; fill: #666; }
+      .arrow { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .metric-arrow { stroke: #7b1fa2; stroke-width: 2; fill: none; marker-end: url(#arrowhead-purple); stroke-dasharray: 5,5; }
+      .load-arrow { stroke: #d32f2f; stroke-width: 3; fill: none; marker-end: url(#arrowhead-red); }
+      .bottleneck-indicator { fill: #ff5252; stroke: #c62828; stroke-width: 2; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#34495e" />
+    </marker>
+    <marker id="arrowhead-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#7b1fa2" />
+    </marker>
+    <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#d32f2f" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" class="title-text">Day 30: Distributed Log Cluster Performance Monitoring</text>
+  <text x="600" y="65" text-anchor="middle" class="subtitle-text">Comprehensive metrics collection, load testing, and bottleneck detection</text>
+
+  <!-- Load Generator -->
+  <rect x="50" y="120" width="200" height="140" rx="10" class="service-box"/>
+  <text x="150" y="145" text-anchor="middle" class="component-text" font-weight="bold">Load Generator</text>
+  <text x="150" y="165" text-anchor="middle" class="metric-text">Port 8081</text>
+  <line x1="60" y1="175" x2="240" y2="175" stroke="#1976d2" stroke-width="1"/>
+  
+  <text x="70" y="195" class="metric-text">• Burst Test: 20K req/sec</text>
+  <text x="70" y="215" class="metric-text">• Ramp Test: 1K→15K</text>
+  <text x="70" y="235" class="metric-text">• Token Bucket Limiter</text>
+  <text x="70" y="250" class="metric-text">• Success Rate: 99.9%</text>
+
+  <!-- Performance Monitor -->
+  <rect x="500" y="120" width="220" height="160" rx="10" class="monitor-box"/>
+  <text x="610" y="145" text-anchor="middle" class="component-text" font-weight="bold">Performance Monitor</text>
+  <text x="610" y="165" text-anchor="middle" class="metric-text">Port 8080</text>
+  <line x1="510" y1="175" x2="710" y2="175" stroke="#7b1fa2" stroke-width="1"/>
+  
+  <text x="520" y="195" class="metric-text">• Latency P50/P95/P99</text>
+  <text x="520" y="215" class="metric-text">• Throughput: 10K events/sec</text>
+  <text x="520" y="235" class="metric-text">• CPU/Memory/I/O metrics</text>
+  <text x="520" y="255" class="metric-text">• Prometheus endpoint</text>
+  <text x="520" y="270" class="metric-text">• 15s scrape interval</text>
+
+  <!-- Metrics Analyzer -->
+  <rect x="950" y="120" width="200" height="140" rx="10" class="service-box"/>
+  <text x="1050" y="145" text-anchor="middle" class="component-text" font-weight="bold">Metrics Analyzer</text>
+  <text x="1050" y="165" text-anchor="middle" class="metric-text">Port 8082</text>
+  <line x1="960" y1="175" x2="1140" y2="175" stroke="#1976d2" stroke-width="1"/>
+  
+  <text x="970" y="195" class="metric-text">• Statistical Analysis</text>
+  <text x="970" y="215" class="metric-text">• Bottleneck Detection</text>
+  <text x="970" y="235" class="metric-text">• Capacity Planning</text>
+  <text x="970" y="250" class="metric-text">• Recommendations</text>
+
+  <!-- Kafka Cluster -->
+  <rect x="50" y="340" width="180" height="110" rx="10" class="infra-box"/>
+  <text x="140" y="365" text-anchor="middle" class="component-text" font-weight="bold">Kafka Cluster</text>
+  <line x1="60" y1="375" x2="220" y2="375" stroke="#f57c00" stroke-width="1"/>
+  
+  <text x="60" y="395" class="metric-text">• 6 Partitions</text>
+  <text x="60" y="415" class="metric-text">• Replication: 1</text>
+  <text x="60" y="435" class="metric-text">• Batch: 16KB</text>
+
+  <!-- Redis Cache -->
+  <rect x="280" y="340" width="180" height="110" rx="10" class="infra-box"/>
+  <text x="370" y="365" text-anchor="middle" class="component-text" font-weight="bold">Redis Cache</text>
+  <line x1="290" y1="375" x2="450" y2="375" stroke="#f57c00" stroke-width="1"/>
+  
+  <text x="290" y="395" class="metric-text">• Max Memory: 256MB</text>
+  <text x="290" y="415" class="metric-text">• Policy: LRU</text>
+  <text x="290" y="435" class="metric-text">• Hit Rate: >95%</text>
+
+  <!-- PostgreSQL -->
+  <rect x="510" y="340" width="180" height="110" rx="10" class="infra-box"/>
+  <text x="600" y="365" text-anchor="middle" class="component-text" font-weight="bold">PostgreSQL</text>
+  <line x1="520" y1="375" x2="680" y2="375" stroke="#f57c00" stroke-width="1"/>
+  
+  <text x="520" y="395" class="metric-text">• Connection Pool: 50</text>
+  <text x="520" y="415" class="metric-text">• Min Idle: 10</text>
+  <text x="520" y="435" class="metric-text">• Query Timeout: 30s</text>
+
+  <!-- Prometheus -->
+  <rect x="740" y="340" width="180" height="110" rx="10" class="infra-box"/>
+  <text x="830" y="365" text-anchor="middle" class="component-text" font-weight="bold">Prometheus</text>
+  <text x="830" y="385" text-anchor="middle" class="metric-text">Port 9090</text>
+  <line x1="750" y1="395" x2="910" y2="395" stroke="#f57c00" stroke-width="1"/>
+  
+  <text x="750" y="415" class="metric-text">• 15s Scrape Interval</text>
+  <text x="750" y="435" class="metric-text">• 30-day Retention</text>
+
+  <!-- Grafana -->
+  <rect x="970" y="340" width="180" height="110" rx="10" class="infra-box"/>
+  <text x="1060" y="365" text-anchor="middle" class="component-text" font-weight="bold">Grafana</text>
+  <text x="1060" y="385" text-anchor="middle" class="metric-text">Port 3000</text>
+  <line x1="980" y1="395" x2="1140" y2="395" stroke="#f57c00" stroke-width="1"/>
+  
+  <text x="980" y="415" class="metric-text">• Real-time Dashboards</text>
+  <text x="980" y="435" class="metric-text">• Alert Rules</text>
+
+  <!-- Bottleneck Indicators -->
+  <circle cx="370" cy="520" r="30" class="bottleneck-indicator"/>
+  <text x="370" y="527" text-anchor="middle" class="component-text" fill="white" font-weight="bold">!</text>
+  <text x="370" y="565" text-anchor="middle" class="metric-text" font-weight="bold">Potential Bottleneck</text>
+  <text x="370" y="585" text-anchor="middle" class="metric-text">Cache Hit Rate: 75%</text>
+
+  <circle cx="830" cy="520" r="30" class="bottleneck-indicator"/>
+  <text x="830" y="527" text-anchor="middle" class="component-text" fill="white" font-weight="bold">!</text>
+  <text x="830" y="565" text-anchor="middle" class="metric-text" font-weight="bold">High Query Load</text>
+  <text x="830" y="585" text-anchor="middle" class="metric-text">CPU: 85%</text>
+
+  <!-- Performance Metrics Box -->
+  <rect x="50" y="630" width="550" height="130" rx="10" class="component-box"/>
+  <text x="325" y="655" text-anchor="middle" class="component-text" font-weight="bold">Performance Metrics</text>
+  <line x1="60" y1="665" x2="590" y2="665" stroke="#2c3e50" stroke-width="1"/>
+  
+  <text x="70" y="690" class="metric-text" font-weight="bold">Throughput:</text>
+  <text x="180" y="690" class="metric-text">10,000 events/sec (baseline), 20,000 events/sec (burst)</text>
+  
+  <text x="70" y="710" class="metric-text" font-weight="bold">Latency:</text>
+  <text x="180" y="710" class="metric-text">P50: 25ms, P95: 45ms, P99: 95ms</text>
+  
+  <text x="70" y="730" class="metric-text" font-weight="bold">Resource Usage:</text>
+  <text x="180" y="730" class="metric-text">CPU: 65%, Memory: 70%, Disk I/O: 45%</text>
+  
+  <text x="70" y="750" class="metric-text" font-weight="bold">Availability:</text>
+  <text x="180" y="750" class="metric-text">99.95% uptime, 0.05% error rate</text>
+
+  <!-- Optimization Recommendations Box -->
+  <rect x="650" y="630" width="500" height="130" rx="10" class="component-box"/>
+  <text x="900" y="655" text-anchor="middle" class="component-text" font-weight="bold">Optimization Recommendations</text>
+  <line x1="660" y1="665" x2="1140" y2="665" stroke="#2c3e50" stroke-width="1"/>
+  
+  <text x="670" y="690" class="metric-text">1. Increase Redis cache size to 512MB (current hit rate 75%)</text>
+  <text x="670" y="710" class="metric-text">2. Scale PostgreSQL connection pool to 75 (current: 50)</text>
+  <text x="670" y="730" class="metric-text">3. Add 2 Kafka partitions (6→8) for parallel processing</text>
+  <text x="670" y="750" class="metric-text">4. Enable G1GC for heap >4GB to reduce pause times</text>
+
+  <!-- Data Flow Arrows -->
+  <path d="M 250 190 L 500 190" class="load-arrow"/>
+  <text x="375" y="185" text-anchor="middle" class="metric-text" fill="#d32f2f" font-weight="bold">20K req/sec</text>
+  
+  <path d="M 720 200 L 950 200" class="arrow"/>
+  <text x="835" y="195" text-anchor="middle" class="metric-text">Analyzed Data</text>
+
+  <path d="M 610 280 L 610 340" class="metric-arrow"/>
+  <path d="M 140 280 L 140 340" class="metric-arrow"/>
+  <path d="M 370 280 L 370 340" class="metric-arrow"/>
+  
+  <path d="M 830 280 L 830 340" class="metric-arrow"/>
+  <text x="850" y="310" text-anchor="start" class="metric-text">Metrics Collection</text>
+
+  <path d="M 920 395 L 970 395" class="arrow"/>
+
+  <!-- Legend -->
+  <rect x="50" y="20" width="15" height="15" class="service-box"/>
+  <text x="75" y="32" class="metric-text">Service Component</text>
+  
+  <rect x="220" y="20" width="15" height="15" class="infra-box"/>
+  <text x="245" y="32" class="metric-text">Infrastructure</text>
+  
+  <rect x="370" y="20" width="15" height="15" class="monitor-box"/>
+  <text x="395" y="32" class="metric-text">Monitoring</text>
+  
+  <line x1="515" y1="28" x2="545" y2="28" class="load-arrow"/>
+  <text x="555" y="32" class="metric-text">Load Test Traffic</text>
+  
+  <line x1="670" y1="28" x2="700" y2="28" class="metric-arrow"/>
+  <text x="710" y="32" class="metric-text">Metrics Flow</text>
+  
+  <circle cx="805" cy="28" r="8" class="bottleneck-indicator"/>
+  <text x="820" y="32" class="metric-text">Bottleneck</text>
+</svg>
