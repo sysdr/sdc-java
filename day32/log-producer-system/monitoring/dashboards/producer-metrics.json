@@ -1,0 +1,23 @@
+{
+  "dashboard": {
+    "title": "Log Producer Metrics",
+    "panels": [
+      {
+        "title": "Messages Sent Rate",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_messages_sent_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Send Latency (p99)",
+        "targets": [
+          {
+            "expr": "kafka_producer_send_duration_seconds{quantile=\"0.99\"}"
+          }
+        ]
+      }
+    ]
+  }
+}
