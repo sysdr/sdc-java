@@ -1,0 +1,75 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: log-consumer
+    
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: log-processor-group
+      topic: application-logs
+      auto-offset-reset: earliest
+      
+  datasource:
+    url: jdbc:postgresql://postgres:5432/logdb
+    username: loguser
+    password: logpass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
+# Resilience4j Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      logProcessing:
+        register-health-indicator: true
+        sliding-window-size: 100
+        minimum-number-of-calls: 10
+        permitted-number-of-calls-in-half-open-state: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        
+# Actuator for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.systemdesign.logprocessor: INFO
+    org.springframework.kafka: WARN
+    org.apache.kafka: WARN
