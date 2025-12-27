@@ -1,0 +1,27 @@
+{
+  "dashboard": {
+    "title": "Message Acknowledgment & Retry Metrics",
+    "panels": [
+      {
+        "title": "Acknowledgment Rate",
+        "targets": [{"expr": "rate(consumer_messages_acknowledged_total[1m])"}],
+        "type": "graph"
+      },
+      {
+        "title": "Retry Rate",
+        "targets": [{"expr": "rate(consumer_messages_rejected_total[1m])"}],
+        "type": "graph"
+      },
+      {
+        "title": "Dead Letter Queue Messages",
+        "targets": [{"expr": "rate(dlq_messages_sent_total[1m])"}],
+        "type": "graph"
+      },
+      {
+        "title": "Processing Time (p99)",
+        "targets": [{"expr": "histogram_quantile(0.99, rate(consumer_processing_time_seconds_bucket[1m]))"}],
+        "type": "graph"
+      }
+    ]
+  }
+}
