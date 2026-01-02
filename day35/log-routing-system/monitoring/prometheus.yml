@@ -1,0 +1,34 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'log-producer'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'routing-service'
+    static_configs:
+      - targets: ['host.docker.internal:8081']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'security-consumer'
+    static_configs:
+      - targets: ['host.docker.internal:9082']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'performance-consumer'
+    static_configs:
+      - targets: ['host.docker.internal:9083']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'application-consumer'
+    static_configs:
+      - targets: ['host.docker.internal:9084']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'system-consumer'
+    static_configs:
+      - targets: ['host.docker.internal:9085']
+    metrics_path: '/actuator/prometheus'
