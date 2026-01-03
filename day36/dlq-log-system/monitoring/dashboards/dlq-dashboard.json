@@ -1,0 +1,33 @@
+{
+  "dashboard": {
+    "title": "Dead Letter Queue Monitoring",
+    "panels": [
+      {
+        "id": 1,
+        "title": "DLQ Messages by Error Type",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(dlq_messages_total[5m])",
+            "legendFormat": "{{type}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Message Processing Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(consumer_messages_processed[5m])",
+            "legendFormat": "Processed"
+          },
+          {
+            "expr": "rate(consumer_messages_failed[5m])",
+            "legendFormat": "Failed"
+          }
+        ]
+      }
+    ]
+  }
+}
