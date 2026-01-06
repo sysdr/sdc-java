@@ -1,0 +1,31 @@
+{
+  "dashboard": {
+    "title": "Kafka Cluster Overview",
+    "panels": [
+      {
+        "title": "Broker Health",
+        "targets": [
+          {
+            "expr": "kafka_cluster_brokers_healthy"
+          }
+        ]
+      },
+      {
+        "title": "Producer Throughput",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_success_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Consumer Lag",
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag"
+          }
+        ]
+      }
+    ]
+  }
+}

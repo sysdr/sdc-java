@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'kafka-admin-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['kafka-admin-service:8081']
+
+  - job_name: 'kafka-health-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['kafka-health-service:8082']
+
+  - job_name: 'load-test-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['load-test-service:8083']
+
+  - job_name: 'kafka-brokers'
+    static_configs:
+      - targets: 
+        - 'kafka-1:9101'
+        - 'kafka-2:9102'
+        - 'kafka-3:9103'

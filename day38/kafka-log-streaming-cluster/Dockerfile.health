@@ -1,0 +1,14 @@
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /app
+COPY pom.xml .
+COPY shared-models shared-models
+COPY kafka-admin-service kafka-admin-service
+COPY kafka-health-service kafka-health-service
+COPY load-test-service load-test-service
+RUN mvn clean install -N && mvn clean package -pl shared-models,kafka-health-service -am -DskipTests
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /app/kafka-health-service/target/*.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]
