@@ -1,0 +1,12 @@
+FROM eclipse-temurin:17-jdk-alpine AS build
+WORKDIR /workspace
+COPY pom.xml .
+COPY transaction-log-shipper transaction-log-shipper
+RUN apk add --no-cache maven
+RUN mvn clean package -DskipTests -pl transaction-log-shipper -am
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /workspace/transaction-log-shipper/target/*.jar app.jar
+EXPOSE 8083
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,31 @@
+{
+  "dashboard": {
+    "title": "Kafka Producer Metrics",
+    "panels": [
+      {
+        "title": "Producer Throughput",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_success_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Producer Errors",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_error_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Send Latency",
+        "targets": [
+          {
+            "expr": "kafka_producer_send_duration_seconds"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+FROM eclipse-temurin:17-jdk-alpine AS build
+WORKDIR /workspace
+COPY pom.xml .
+COPY log-gateway log-gateway
+RUN apk add --no-cache maven
+RUN mvn clean package -DskipTests -pl log-gateway -am
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /workspace/log-gateway/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
