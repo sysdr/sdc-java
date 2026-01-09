@@ -1,0 +1,31 @@
+{
+  "dashboard": {
+    "title": "Kafka Consumer Partitioning Dashboard",
+    "panels": [
+      {
+        "title": "Events Processed by Partition",
+        "targets": [
+          {
+            "expr": "rate(log_events_processed_by_partition_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Consumer Lag by Partition",
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag"
+          }
+        ]
+      },
+      {
+        "title": "Processing Time",
+        "targets": [
+          {
+            "expr": "rate(log_processing_time_seconds_sum[1m]) / rate(log_processing_time_seconds_count[1m])"
+          }
+        ]
+      }
+    ]
+  }
+}
