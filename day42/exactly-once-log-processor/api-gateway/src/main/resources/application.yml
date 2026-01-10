@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: api-gateway
+
+server:
+  port: 8080
+
+producer:
+  url: http://log-producer:8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.gateway: DEBUG

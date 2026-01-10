@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: log-consumer
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: log-processor-group
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # Exactly-once semantics
+        isolation.level: read_committed
+        # Performance
+        max.poll.records: 100
+        fetch.min.bytes: 1024
+        fetch.max.wait.ms: 500
+      auto-offset-reset: latest
+  datasource:
+    url: jdbc:postgresql://postgres:5432/logprocessor
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        naming:
+          physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  redis:
+    host: redis
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 2
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    com.example.consumer: DEBUG
+    org.apache.kafka: INFO
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: INFO

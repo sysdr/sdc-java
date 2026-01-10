@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: log-producer
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Exactly-once semantics
+        enable.idempotence: true
+        acks: all
+        retries: 2147483647
+        max.in.flight.requests.per.connection: 5
+        # Performance - using gzip instead of snappy (snappy requires native libraries)
+        compression.type: gzip
+        batch.size: 16384
+        linger.ms: 10
+        buffer.memory: 33554432
+  redis:
+    host: redis
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 2
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    com.example.producer: DEBUG
+    org.apache.kafka: INFO
+    org.springframework.kafka: INFO
