@@ -1,0 +1,39 @@
+{
+  "dashboard": {
+    "title": "Log Compaction State Management",
+    "panels": [
+      {
+        "title": "State Updates per Second",
+        "targets": [
+          {
+            "expr": "rate(state_updates_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Tombstones Processed",
+        "targets": [
+          {
+            "expr": "rate(state_materialization_tombstones_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Cache Hit Rate",
+        "targets": [
+          {
+            "expr": "rate(state_query_cache_hits_total[1m]) / (rate(state_query_cache_hits_total[1m]) + rate(state_query_cache_misses_total[1m]))"
+          }
+        ]
+      },
+      {
+        "title": "State Query Latency P99",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(state_query_time_seconds_bucket[1m]))"
+          }
+        ]
+      }
+    ]
+  }
+}
