@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: dashboard-api
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+server:
+  port: 8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true

@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: stream-processor
+  kafka:
+    bootstrap-servers: kafka:9092
+    streams:
+      application-id: monitoring-dashboard-streams-v2
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        commit.interval.ms: 1000
+        cache.max.bytes.buffering: 10485760
+        state.dir: /tmp/kafka-streams
+        num.stream.threads: 2
+        processing.guarantee: at_least_once
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true

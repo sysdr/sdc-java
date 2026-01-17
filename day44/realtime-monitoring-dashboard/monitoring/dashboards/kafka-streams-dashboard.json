@@ -1,0 +1,23 @@
+{
+  "dashboard": {
+    "title": "Kafka Streams Monitoring",
+    "panels": [
+      {
+        "title": "Stream Processor Lag",
+        "targets": [
+          {
+            "expr": "kafka_stream_consumer_fetch_manager_records_lag_max"
+          }
+        ]
+      },
+      {
+        "title": "Processing Rate",
+        "targets": [
+          {
+            "expr": "rate(kafka_stream_task_process_total[1m])"
+          }
+        ]
+      }
+    ]
+  }
+}
