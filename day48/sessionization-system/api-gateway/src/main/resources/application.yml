@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.sessionization: INFO

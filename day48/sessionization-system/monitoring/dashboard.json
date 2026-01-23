@@ -1,0 +1,47 @@
+{
+  "dashboard": {
+    "title": "Sessionization System Dashboard",
+    "panels": [
+      {
+        "title": "Events per Second",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_record_send_total[1m])"
+          }
+        ],
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "title": "Active Sessions",
+        "targets": [
+          {
+            "expr": "kafka_streams_state_store_records{store_name=\"session-store\"}"
+          }
+        ],
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "title": "Session Duration Distribution",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, session_duration_seconds_bucket)"
+          }
+        ],
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "title": "Conversion Rate",
+        "targets": [
+          {
+            "expr": "rate(sessions_converted_total[5m]) / rate(sessions_total[5m])"
+          }
+        ],
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      }
+    ]
+  }
+}

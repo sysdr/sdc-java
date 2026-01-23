@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: session-processor
+  kafka:
+    bootstrap-servers: kafka:29092
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.sessionization: INFO
+    org.apache.kafka.streams: WARN
