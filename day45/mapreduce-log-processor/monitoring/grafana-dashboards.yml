@@ -1,0 +1,21 @@
+apiVersion: 1
+
+providers:
+  - name: 'MapReduce Dashboard'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+
+# Key Metrics to Monitor:
+# - Job completion rate and duration
+# - Task success/failure rates
+# - Map/Reduce throughput (records/sec)
+# - Intermediate data volume in Redis
+# - Worker CPU/Memory utilization
+# - Coordinator queue depth
+# - Task retry counts
