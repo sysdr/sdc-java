@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: query-api
+  kafka:
+    bootstrap-servers: localhost:9092
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.queryapi: INFO
+    org.apache.kafka: WARN

@@ -1,0 +1,27 @@
+{
+  "dashboard": {
+    "title": "Sliding Window Analytics",
+    "panels": [
+      {
+        "title": "Events Produced",
+        "targets": [{"expr": "rate(log_events_produced_total[1m])"}],
+        "type": "graph"
+      },
+      {
+        "title": "Events Processed",
+        "targets": [{"expr": "rate(stream_events_processed_total[1m])"}],
+        "type": "graph"
+      },
+      {
+        "title": "Query Cache Hit Rate",
+        "targets": [{"expr": "rate(query_cache_hit_total[1m]) / (rate(query_cache_hit_total[1m]) + rate(query_cache_miss_total[1m]))"}],
+        "type": "graph"
+      },
+      {
+        "title": "Query Latency P99",
+        "targets": [{"expr": "histogram_quantile(0.99, rate(query_latency_seconds_bucket[1m]))"}],
+        "type": "graph"
+      }
+    ]
+  }
+}

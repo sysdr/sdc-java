@@ -1,0 +1,64 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Data directories
+data/
+/tmp/kafka-streams*
+/tmp/kafka-streams-query*
+
+# Build artifacts
+*.jar
+!**/src/main/**/*.jar
+*.war
+*.ear
+*.class
+
+# Test output
+test-output/
+coverage/
+
+# Application specific
+*.log
+load-test-results.txt
