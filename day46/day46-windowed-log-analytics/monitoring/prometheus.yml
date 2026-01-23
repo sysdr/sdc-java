@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'log-producer'
+    static_configs:
+      - targets: ['log-producer:8081']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'window-processor'
+    static_configs:
+      - targets: ['window-processor:8082']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8080']
+    metrics_path: '/actuator/prometheus'

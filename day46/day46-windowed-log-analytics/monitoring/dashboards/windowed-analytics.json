@@ -1,0 +1,45 @@
+{
+  "dashboard": {
+    "title": "Windowed Log Analytics Dashboard",
+    "panels": [
+      {
+        "title": "Events Processed Per Second",
+        "targets": [
+          {
+            "expr": "rate(window_events_processed_total[1m])"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "title": "Window Processing Errors",
+        "targets": [
+          {
+            "expr": "rate(window_processing_errors_total[5m])"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "title": "Kafka Streams Lag",
+        "targets": [
+          {
+            "expr": "kafka_consumer_fetch_manager_records_lag"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "title": "JVM Memory Usage",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{area=\"heap\"}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      }
+    ],
+    "refresh": "5s",
+    "time": {"from": "now-15m", "to": "now"}
+  }
+}

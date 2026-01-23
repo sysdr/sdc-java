@@ -1,0 +1,59 @@
+# Maven build artifacts
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+logs/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.classpath
+.factorypath
+
+# OS files
+.DS_Store
+Thumbs.db
+*~
+
+# Editor files
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Docker
+docker-compose.override.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Application specific
+/tmp/
+*.pid
+*.seed
+*.pid.lock
+
+# Kafka Streams state (local)
+/tmp/kafka-streams/
+kafka-streams-state/
+
+# Secrets and keys
+**/keys/
+**/secrets/
+*.pem
+*.key
+*.crt
+secrets.yml
+secrets.yaml

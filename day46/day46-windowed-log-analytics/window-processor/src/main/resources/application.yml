@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: window-processor
+  kafka:
+    bootstrap-servers: kafka:9092
+    streams:
+      application-id: windowed-log-analytics
+      client-id: window-processor-1
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        state.dir: /tmp/kafka-streams
+        num.stream.threads: 4
+        commit.interval.ms: 30000
+        cache.max.bytes.buffering: 10485760
+        rocksdb.config.setter: org.apache.kafka.streams.state.RocksDBConfigSetter
+  datasource:
+    url: jdbc:postgresql://postgres:5432/logdb
+    username: loguser
+    password: logpass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info,kafkastreams
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example: INFO
+    org.apache.kafka.streams: INFO
+    org.hibernate: WARN
