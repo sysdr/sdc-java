@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'metrics-aggregator'
+    static_configs:
+      - targets: ['metrics-aggregator:8081']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'dashboard-service'
+    static_configs:
+      - targets: ['dashboard-service:8080']
+    metrics_path: '/actuator/prometheus'

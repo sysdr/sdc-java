@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: metrics-aggregator
+  kafka:
+    bootstrap-servers: kafka:9092
+  datasource:
+    url: jdbc:postgresql://postgres:5432/metricsdb
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: dashboard-service
+  kafka:
+    bootstrap-servers: kafka:9092
+  datasource:
+    url: jdbc:postgresql://postgres:5432/metricsdb
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: none
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+server:
+  port: 8080
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      dashboard-query:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
