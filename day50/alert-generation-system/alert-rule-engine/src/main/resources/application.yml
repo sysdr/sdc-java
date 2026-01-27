@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: alert-rule-engine
+  kafka:
+    bootstrap-servers: kafka:9092
+    streams:
+      application-id: alert-rule-engine-v2
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.springframework.kafka.support.serializer.JsonSerde
+        commit.interval.ms: 1000
+        cache.max.bytes.buffering: 10485760
+        state.dir: /tmp/kafka-streams
+        processing.guarantee: at_least_once
+    consumer:
+      group-id: alert-rule-engine-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example: DEBUG
+    org.apache.kafka: INFO

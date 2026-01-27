@@ -1,0 +1,25 @@
+{
+  "dashboard": {
+    "title": "Alert Generation System",
+    "panels": [
+      {
+        "title": "Alerts Generated",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(alerts_processed_total[5m])"
+          }
+        ]
+      },
+      {
+        "title": "Notifications Sent",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(notifications_sent_total[5m])"
+          }
+        ]
+      }
+    ]
+  }
+}
