@@ -1,0 +1,12 @@
+{
+  "dashboard": {
+    "title": "Inverted Index Search Metrics",
+    "panels": [
+      {
+        "title": "System Overview",
+        "type": "text",
+        "content": "Dashboard for Inverted Index Search System"
+      }
+    ]
+  }
+}
