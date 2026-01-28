@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: log-producer
+  kafka:
+    bootstrap-servers: kafka:9092
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

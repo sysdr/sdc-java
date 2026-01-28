@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: aggregation-service
+  kafka:
+    bootstrap-servers: kafka:9092
+    streams:
+      application-id: facet-aggregation-app
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+server:
+  port: 8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
