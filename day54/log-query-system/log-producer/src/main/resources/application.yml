@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: log-producer
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+server:
+  port: 8082
+
+logging:
+  level:
+    com.example: INFO

@@ -1,0 +1,50 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+
+# Logs
+*.log
+logs/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# IDE
+.DS_Store
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# Docker
+.docker/
+
+# Environment and secrets
+.env
+.env.local
+*.key
+*.pem
+*.p12
+secrets/
+credentials/
+
+# Build artifacts
+dist/
+build/
+out/
+
+# OS
+Thumbs.db
+.DS_Store

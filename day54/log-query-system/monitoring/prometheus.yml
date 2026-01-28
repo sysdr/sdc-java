@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'query-coordinator'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['query-coordinator:8080']
+
+  - job_name: 'query-executor'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: 
+          - 'query-executor-1:8081'
+          - 'query-executor-2:8081'
+          - 'query-executor-3:8081'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

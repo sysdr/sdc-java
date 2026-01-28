@@ -1,0 +1,21 @@
+FROM eclipse-temurin:17-jdk-alpine as build
+WORKDIR /app
+COPY pom.xml .
+RUN mkdir -p query-coordinator query-executor log-producer
+COPY query-coordinator/pom.xml query-coordinator/
+COPY query-executor/pom.xml query-executor/
+COPY log-producer/pom.xml log-producer/
+RUN apk add --no-cache maven
+WORKDIR /app/query-executor
+RUN mvn dependency:go-offline -N
+WORKDIR /app
+RUN mvn dependency:go-offline -pl query-executor -am
+COPY query-executor/src query-executor/src
+WORKDIR /app/query-executor
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/query-executor/target/*.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar"]
