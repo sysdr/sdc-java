@@ -1,0 +1,27 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: shard-router
+
+index:
+  nodes: http://index-node-1:8081,http://index-node-2:8082,http://index-node-3:8083
+
+ring:
+  virtual:
+    nodes: 16
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.router: INFO

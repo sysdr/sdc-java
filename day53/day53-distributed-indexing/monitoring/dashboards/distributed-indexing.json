@@ -1,0 +1,47 @@
+{
+  "dashboard": {
+    "title": "Distributed Indexing System",
+    "panels": [
+      {
+        "title": "Documents Indexed per Node",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(index_documents_indexed_total[1m])",
+            "legendFormat": "{{job}}"
+          }
+        ]
+      },
+      {
+        "title": "Search Query Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(search_operation_duration_seconds_bucket[1m]))",
+            "legendFormat": "p99"
+          }
+        ]
+      },
+      {
+        "title": "Scatter-Gather Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(coordinator_scatter_gather_duration_seconds_sum[1m]) / rate(coordinator_scatter_gather_duration_seconds_count[1m])",
+            "legendFormat": "Average"
+          }
+        ]
+      },
+      {
+        "title": "Router Distribution",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(router_requests_routed_total[1m])",
+            "legendFormat": "Routed Requests/sec"
+          }
+        ]
+      }
+    ]
+  }
+}

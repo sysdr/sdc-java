@@ -1,0 +1,28 @@
+server:
+  port: 8095
+
+spring:
+  application:
+    name: log-producer
+
+router:
+  url: http://shard-router:8090
+
+log:
+  generation:
+    batch:
+      size: 100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.producer: INFO

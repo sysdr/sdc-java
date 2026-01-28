@@ -1,0 +1,27 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: index-node
+
+index:
+  node:
+    id: ${NODE_ID:node-1}
+  flush:
+    interval: 30
+    threshold: 10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.indexnode: INFO

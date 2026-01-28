@@ -1,0 +1,34 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'index-node-1'
+    static_configs:
+      - targets: ['index-node-1:8081']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'index-node-2'
+    static_configs:
+      - targets: ['index-node-2:8082']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'index-node-3'
+    static_configs:
+      - targets: ['index-node-3:8083']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'query-coordinator'
+    static_configs:
+      - targets: ['query-coordinator:8080']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'shard-router'
+    static_configs:
+      - targets: ['shard-router:8090']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'log-producer'
+    static_configs:
+      - targets: ['log-producer:8095']
+    metrics_path: '/actuator/prometheus'

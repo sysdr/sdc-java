@@ -1,0 +1,49 @@
+# Maven
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Data
+data/
+*.db
+*.sqlite
+
+# Docker
+.docker/
+
+# Environment and secrets
+.env
+.env.local
+*.key
+*.pem
+*.p12
+secrets/
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

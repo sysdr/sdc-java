@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: query-coordinator
+
+index:
+  nodes: http://index-node-1:8081,http://index-node-2:8082,http://index-node-3:8083
+
+query:
+  timeout:
+    ms: 500
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.coordinator: INFO
