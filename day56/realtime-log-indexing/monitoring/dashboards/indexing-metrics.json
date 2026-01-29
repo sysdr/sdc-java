@@ -1,0 +1,31 @@
+{
+  "dashboard": {
+    "title": "Real-Time Log Indexing Metrics",
+    "panels": [
+      {
+        "title": "Indexing Rate",
+        "targets": [
+          {
+            "expr": "rate(documents_indexed_total[1m])"
+          }
+        ]
+      },
+      {
+        "title": "Indexing Latency",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(indexing_latency_bucket[5m]))"
+          }
+        ]
+      },
+      {
+        "title": "Search Query Latency",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(search_latency_bucket[5m]))"
+          }
+        ]
+      }
+    ]
+  }
+}
