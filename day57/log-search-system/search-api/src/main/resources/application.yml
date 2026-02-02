@@ -1,0 +1,35 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: search-api
+
+elasticsearch:
+  host: localhost
+  port: 9200
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      elasticsearch:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics,circuitbreakers
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.searchapi: DEBUG
+    co.elastic.clients: INFO

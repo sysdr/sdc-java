@@ -1,0 +1,36 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: log-indexer
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: log-indexer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      max-poll-records: 500
+    listener:
+      ack-mode: manual
+
+elasticsearch:
+  host: localhost
+  port: 9200
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.example.logindexer: DEBUG
+    org.springframework.kafka: INFO

@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "title": "Log Search System",
+    "panels": [
+      {
+        "title": "Messages Produced (Kafka)",
+        "targets": [
+          {
+            "expr": "rate(kafka_messages_produced_total[5m])",
+            "legendFormat": "Producer Rate"
+          }
+        ]
+      },
+      {
+        "title": "Documents Indexed (Elasticsearch)",
+        "targets": [
+          {
+            "expr": "rate(elasticsearch_documents_indexed_total[5m])",
+            "legendFormat": "Indexing Rate"
+          }
+        ]
+      },
+      {
+        "title": "Search Request Rate",
+        "targets": [
+          {
+            "expr": "rate(search_requests_total[5m])",
+            "legendFormat": "Search Rate"
+          }
+        ]
+      },
+      {
+        "title": "Search Latency (p99)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(search_duration_seconds_bucket[5m]))",
+            "legendFormat": "p99 Latency"
+          }
+        ]
+      }
+    ]
+  }
+}
