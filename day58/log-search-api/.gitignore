@@ -1,0 +1,55 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/
+mvnw
+mvnw.cmd
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
+
+### Docker ###
+*.log
+data/
+logs/
+*.pid
+
+### Application ###
+application-local.yml
+application-prod.yml
+*.env
+.env.local
+.env.production
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Temporary files ###
+*.tmp
+*.bak
+*.swp
+*~
