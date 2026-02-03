@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: log-consumer
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/logprocessor
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: log-consumer-failover-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: manual
+
+server:
+  port: 8081
+
+kafka:
+  topic:
+    log-events: log-events
+  consumer:
+    group-id: log-consumer-failover-group
+
+zookeeper:
+  connection-string: localhost:2181
+
+failover:
+  leader-path: /failover/leader
+  heartbeat-interval: 1000
+  heartbeat-timeout: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      kafkaConsumer:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s

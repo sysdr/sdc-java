@@ -1,0 +1,84 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Istio
+istio/
+*istio*
+*.istio
+
+# Docker
+docker-volumes/
+docker-data/
+*.pid
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Secrets and keys (if any)
+*.key
+*.pem
+*.p12
+*.jks
+secrets/
+.env.local
+.env.*.local
+
+# Application specific
+/tmp/
+*.pid
+*.lock

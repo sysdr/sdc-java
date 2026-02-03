@@ -1,0 +1,204 @@
+{
+  "dashboard": {
+    "title": "Active-Passive Failover System Dashboard",
+    "tags": ["failover", "kafka", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "5s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Messages Processed Total",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "messages_processed_total",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Leader Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "leader_status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "yellow", "text": "Standby"},
+                {"value": 1, "color": "green", "text": "Leader"}
+              ]
+            },
+            "mappings": [
+              {"type": "value", "options": {"0": {"text": "Standby"}, "1": {"text": "Leader"}}}
+            ]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Current Epoch",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "leader_epoch",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Failover Events Total",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "failover_events_total",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Messages Processed Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "rate(messages_processed_total[1m])",
+            "refId": "A",
+            "legendFormat": "Messages/sec"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Messages/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Recovery Time (P95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, failover_recovery_time_seconds)",
+            "refId": "A",
+            "legendFormat": "P95 Recovery Time"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Seconds"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Leader Status Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "leader_status",
+            "refId": "A",
+            "legendFormat": "Leader (1=Leader, 0=Standby)"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "min": 0, "max": 1},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Total Messages Processed",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "messages_processed_total",
+            "refId": "A",
+            "legendFormat": "Total Messages"
+          }
+        ],
+        "yaxes": [
+          {"format": "short"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Failover Events Timeline",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "failover_events_total",
+            "refId": "A",
+            "legendFormat": "Failover Events"
+          }
+        ],
+        "yaxes": [
+          {"format": "short"},
+          {"format": "short"}
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    }
+  }
+}

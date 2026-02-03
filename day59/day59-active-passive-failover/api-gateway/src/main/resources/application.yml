@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: api-gateway
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080
+
+kafka:
+  topic:
+    log-events: log-events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
