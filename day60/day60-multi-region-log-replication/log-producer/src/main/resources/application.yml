@@ -1,0 +1,55 @@
+# =============================================================================
+# Log Producer – Application Configuration
+# =============================================================================
+# The REGION env var is injected by docker-compose per-container instance.
+# In CI or local dev without Docker, override with: --app.region=region-a
+# =============================================================================
+app:
+  region: ${REGION:region-a}
+
+server:
+  port: ${PRODUCER_PORT:8081}
+
+# ── Kafka ────────────────────────────────────────────────────────────────────
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka-region-a:9092}
+    producer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka-region-a:9092}
+      # acks=all ensures the leader and all in-sync replicas have written
+      # before the producer receives confirmation. Critical for durability.
+      acks: all
+      # Idempotent producer: Kafka de-dupes retries at the broker level.
+      # Requires acks=all and enables exactly-once semantics per partition.
+      enable-idempotence: true
+      # Linger + batch tuning: accumulate up to 16KB or 5ms before sending.
+      # Reduces TCP round-trips under sustained load without sacrificing
+      # more than 5ms of latency on quiet periods.
+      linger-ms: 5
+      batch-size: 16384
+      # Serializer: uses Spring's built-in Jackson-based JSON serializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    # Spring Kafka header-based type mapping so the consumer can
+    # deserialize without knowing the concrete class at compile time.
+    properties:
+      spring.json.type.mapping: "logevent=com.example.logprocessor.producer.model.LogEvent"
+
+# ── Actuator & Metrics ───────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.example.logprocessor: INFO
+    org.springframework.kafka: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [region=${app.region}] %logger{36} – %msg%n"

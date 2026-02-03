@@ -1,0 +1,52 @@
+# =============================================================================
+# API Gateway – Application Configuration
+# =============================================================================
+app:
+  region-a:
+    endpoint: ${REGION_A_ENDPOINT:http://log-producer-a:8081}
+  region-b:
+    endpoint: ${REGION_B_ENDPOINT:http://log-producer-b:8081}
+
+server:
+  port: ${GATEWAY_PORT:8080}
+
+# ── Spring Cloud Gateway ─────────────────────────────────────────────────────
+spring:
+  cloud:
+    gateway:
+      # Default filters applied to all routes
+      default-filters:
+        - AddRequestHeader=X-Powered-By, Day60-MultiRegion-Gateway
+      # Metrics
+      metrics:
+        enabled: true
+
+# ── Resilience4j ─────────────────────────────────────────────────────────────
+resilience4j:
+  circuitbreaker:
+    configs:
+      gateway-default:
+        failure-rate-threshold: 40
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 5
+        sliding-window-size: 20
+
+# ── Actuator ─────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, gateway
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: always
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.example.logprocessor: INFO
+    org.springframework.cloud.gateway: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [gateway] %logger{36} – %msg%n"

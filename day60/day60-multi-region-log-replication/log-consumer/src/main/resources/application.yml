@@ -1,0 +1,90 @@
+# =============================================================================
+# Log Consumer – Application Configuration
+# =============================================================================
+app:
+  region: ${REGION:region-a}
+  remote-region: ${REMOTE_REGION:region-b}
+
+  # ── Deduplication tuning ─────────────────────────────────────────────────
+  dedup:
+    bloom:
+      expected-insertions: 1000000   # Expected unique events before FP rate degrades
+      false-positive-rate: 0.0001    # 1 in 10,000 — matches the lesson's target
+    redis:
+      ttl-hours: 24                  # Events older than this can theoretically re-enter
+
+  # ── Reorder buffer tuning ────────────────────────────────────────────────
+  reorder:
+    window-ms: 1000                  # 1-second watermark window. Tune based on replication lag.
+
+  # ── Consumer topic routing ───────────────────────────────────────────────
+  consumer:
+    group-id: log-consumer-group-${REGION:region-a}
+    local-topic: log-events-${REGION:region-a}
+    # MirrorMaker prefixes replicated topics with "<source-alias>."
+    remote-topic: "${REMOTE_REGION:region-b}.log-events-${REMOTE_REGION:region-b}"
+
+server:
+  port: ${CONSUMER_PORT:8082}
+
+# ── Kafka ────────────────────────────────────────────────────────────────────
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka-region-a:9092}
+    consumer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka-region-a:9092}
+      group-id: ${app.consumer.group-id}
+      auto-offset-reset: earliest
+      enable-auto-commit: false     # Manual offset commit for at-least-once semantics
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      max-poll-records: 100         # Process in batches of 100 for throughput
+    properties:
+      spring.json.trusted.packages: "com.example.logprocessor.*"
+      spring.json.type.mapping: "logevent=com.example.logprocessor.consumer.model.LogEvent"
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:logdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: update           # Use Flyway/Liquibase in production
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect  # Switch to PostgreSQLDialect in prod
+
+  # ── Redis ────────────────────────────────────────────────────────────────
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+
+# ── Resilience4j circuit breaker ─────────────────────────────────────────────
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+
+# ── Actuator & Metrics ───────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.example.logprocessor: INFO
+    org.springframework.kafka: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [region=${app.region}] %logger{36} – %msg%n"

@@ -1,0 +1,160 @@
+# =============================================================================
+# .gitignore - Multi-Region Log Replication Project
+# =============================================================================
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Java
+*.class
+*.log
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+.idea_modules/
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+bin/
+.metadata/
+
+# IDE - VS Code
+.vscode/
+*.code-workspace
+
+# IDE - NetBeans
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Build artifacts
+build/
+dist/
+*.jar
+!**/src/main/**/*.jar
+!**/src/test/**/*.jar
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.npm
+.node_repl_history
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.env
+.env.local
+.env.*.local
+
+# Kubernetes / Istio
+*.kubeconfig
+istio/
+Istio/
+*.yaml.bak
+*.yml.bak
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+secrets/
+credentials/
+.env
+.env.*
+!*.env.example
+
+# Application specific
+application-local.yml
+application-dev.yml
+application-prod.yml
+*.properties.local
+
+# Monitoring and logs
+monitoring/prometheus/data/
+monitoring/grafana/data/
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.cache/
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Backup files
+*.bak
+*.backup
+*~

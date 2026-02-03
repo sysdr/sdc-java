@@ -1,0 +1,57 @@
+# =============================================================================
+# Prometheus – Scrape Configuration
+#
+# Scrape targets:
+#   - Both log producers (metrics endpoint)
+#   - Both log consumers (metrics + dedup/reorder metrics)
+#   - API Gateway
+#   - Kafka exporters (if deployed; commented out for base setup)
+# =============================================================================
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+scrape_configs:
+  # ── Application services ───────────────────────────────────────────────────
+  - job_name: log-producer-a
+    static_configs:
+      - targets: ['log-producer-a:8081']
+    metrics_path: /actuator/prometheus
+
+  - job_name: log-producer-b
+    static_configs:
+      - targets: ['log-producer-b:8081']
+    metrics_path: /actuator/prometheus
+
+  - job_name: log-consumer-a
+    static_configs:
+      - targets: ['log-consumer-a:8082']
+    metrics_path: /actuator/prometheus
+
+  - job_name: log-consumer-b
+    static_configs:
+      - targets: ['log-consumer-b:8082']
+    metrics_path: /actuator/prometheus
+
+  - job_name: api-gateway
+    static_configs:
+      - targets: ['api-gateway:8080']
+    metrics_path: /actuator/prometheus
+
+  # ── Prometheus self-monitoring ─────────────────────────────────────────────
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ── Kafka Exporter (optional – uncomment if kafka-exporter container is running) ──
+  # - job_name: kafka-exporter
+  #   static_configs:
+  #     - targets: ['kafka-exporter:9394']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []  # Add Alertmanager URL here when deployed
+
+rule_files:
+  - /etc/prometheus/alerts.yml  # Optional: add alert rules here

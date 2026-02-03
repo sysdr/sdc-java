@@ -1,0 +1,22 @@
+FROM eclipse-temurin:17-jdk-alpine AS builder
+WORKDIR /app
+# Copy all modules for parent POM resolution
+COPY pom.xml ./
+COPY log-producer/ ./log-producer/
+COPY log-consumer/ ./log-consumer/
+COPY api-gateway/ ./api-gateway/
+# Install Maven
+RUN apk add --no-cache maven
+# Step 1: Install parent POM to local repo (enables BOM resolution)
+RUN mvn install -N -q
+# Step 2: Build all modules (BOM now resolves from installed parent)
+RUN mvn clean package -DskipTests -Dmaven.test.skip=true -q
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+COPY --from=builder /app/log-consumer/target/log-consumer-*.jar app.jar
+EXPOSE 8082
+HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:8082/actuator/health || exit 1
+ENTRYPOINT ["java", "-Djava.security.manager=disallow", "-jar", "app.jar"]

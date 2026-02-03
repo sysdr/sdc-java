@@ -1,0 +1,347 @@
+# =============================================================================
+# Docker Compose – Full Multi-Region Log Replication Stack
+#
+# Simulates two geographic regions on a single Docker host using network
+# namespacing. Each region has its own Kafka broker. MirrorMaker 2 instances
+# handle cross-region replication in both directions (active-active).
+#
+# Services:
+#   Infrastructure:    zookeeper, kafka-region-a, kafka-region-b, redis, postgres
+#   Replication:        mirrormaker-a-to-b, mirrormaker-b-to-a
+#   Application:        log-producer-a, log-producer-b, log-consumer-a,
+#                       log-consumer-b, api-gateway
+#   Observability:      prometheus, grafana
+# =============================================================================
+version: '3.8'
+
+# ── Shared network ───────────────────────────────────────────────────────────
+networks:
+  log-mesh:
+    driver: bridge
+
+# =============================================================================
+# INFRASTRUCTURE SERVICES
+# =============================================================================
+services:
+
+  # ── ZooKeeper (shared between both Kafka clusters for simplicity) ──────────
+  zookeeper:
+    image: zookeeper:3.9
+    container_name: zookeeper
+    networks: [log-mesh]
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z localhost 2181"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # ── Kafka Region A ──────────────────────────────────────────────────────────
+  kafka-region-a:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-region-a
+    networks: [log-mesh]
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-region-a:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_NUM_PARTITIONS: 8
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_CLUSTER_ID: region-a-cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # ── Kafka Region B ──────────────────────────────────────────────────────────
+  kafka-region-b:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-region-b
+    networks: [log-mesh]
+    ports:
+      - "9093:9092"
+      - "9095:9094"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-region-b:9092,EXTERNAL://localhost:9095
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_NUM_PARTITIONS: 8
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_CLUSTER_ID: region-b-cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # ── Redis (shared; in prod each region would have its own) ──────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    networks: [log-mesh]
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    networks: [log-mesh]
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=loguser
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      - POSTGRES_DB=logdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loguser -d logdb"]
+      interval: 5s
+      timeout: 3s
+
+# =============================================================================
+# MIRRORMAKER 2: CROSS-REGION REPLICATION
+# =============================================================================
+
+  # ── MirrorMaker: Region A → Region B ────────────────────────────────────────
+  mirrormaker-a-to-b:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: mirrormaker-a-to-b
+    networks: [log-mesh]
+    depends_on:
+      kafka-region-a:
+        condition: service_healthy
+      kafka-region-b:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -c
+      - |
+        # Create MirrorMaker config files at runtime
+        cat > /tmp/mm2.properties << 'MMEOF'
+        clusters=region-a,region-b
+        region-a.bootstrap.servers=kafka-region-a:9092
+        region-b.bootstrap.servers=kafka-region-b:9092
+        region-a->region-b.enabled=true
+        region-b->region-a.enabled=false
+        region-a->region-b.topics=log-events-region-a
+        region-a->region-b.sync.topic.configs.enabled=true
+        region-a->region-b.sync.consumer.groups.enabled=true
+        MMEOF
+        kafka-mirror-maker-2.sh --config /tmp/mm2.properties
+    restart: unless-stopped
+
+  # ── MirrorMaker: Region B → Region A ────────────────────────────────────────
+  mirrormaker-b-to-a:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: mirrormaker-b-to-a
+    networks: [log-mesh]
+    depends_on:
+      kafka-region-a:
+        condition: service_healthy
+      kafka-region-b:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -c
+      - |
+        cat > /tmp/mm2.properties << 'MMEOF'
+        clusters=region-a,region-b
+        region-a.bootstrap.servers=kafka-region-a:9092
+        region-b.bootstrap.servers=kafka-region-b:9092
+        region-b->region-a.enabled=true
+        region-a->region-b.enabled=false
+        region-b->region-a.topics=log-events-region-b
+        region-b->region-a.sync.topic.configs.enabled=true
+        region-b->region-a.sync.consumer.groups.enabled=true
+        MMEOF
+        kafka-mirror-maker-2.sh --config /tmp/mm2.properties
+    restart: unless-stopped
+
+# =============================================================================
+# APPLICATION SERVICES
+# =============================================================================
+
+  # ── Log Producer – Region A ──────────────────────────────────────────────────
+  log-producer-a:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.producer
+    container_name: log-producer-a
+    networks: [log-mesh]
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka-region-a:
+        condition: service_healthy
+    environment:
+      - REGION=region-a
+      - KAFKA_BOOTSTRAP=kafka-region-a:9092
+      - PRODUCER_PORT=8081
+    restart: unless-stopped
+
+  # ── Log Producer – Region B ──────────────────────────────────────────────────
+  log-producer-b:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.producer
+    container_name: log-producer-b
+    networks: [log-mesh]
+    ports:
+      - "8083:8081"
+    depends_on:
+      kafka-region-b:
+        condition: service_healthy
+    environment:
+      - REGION=region-b
+      - KAFKA_BOOTSTRAP=kafka-region-b:9092
+      - PRODUCER_PORT=8081
+    restart: unless-stopped
+
+  # ── Log Consumer – Region A ──────────────────────────────────────────────────
+  log-consumer-a:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.consumer
+    container_name: log-consumer-a
+    networks: [log-mesh]
+    ports:
+      - "8082:8082"
+    depends_on:
+      kafka-region-a:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - REGION=region-a
+      - REMOTE_REGION=region-b
+      - KAFKA_BOOTSTRAP=kafka-region-a:9092
+      - CONSUMER_PORT=8082
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DB_URL=jdbc:postgresql://postgres:5432/logdb
+      - DB_USER=loguser
+      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:-changeme}}
+      - DB_DRIVER=org.postgresql.Driver
+    restart: unless-stopped
+
+  # ── Log Consumer – Region B ──────────────────────────────────────────────────
+  log-consumer-b:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.consumer
+    container_name: log-consumer-b
+    networks: [log-mesh]
+    ports:
+      - "8084:8082"
+    depends_on:
+      kafka-region-b:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - REGION=region-b
+      - REMOTE_REGION=region-a
+      - KAFKA_BOOTSTRAP=kafka-region-b:9092
+      - CONSUMER_PORT=8082
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DB_URL=jdbc:postgresql://postgres:5432/logdb
+      - DB_USER=loguser
+      - DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:-changeme}}
+      - DB_DRIVER=org.postgresql.Driver
+    restart: unless-stopped
+
+  # ── API Gateway ──────────────────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.gateway
+    container_name: api-gateway
+    networks: [log-mesh]
+    ports:
+      - "8080:8080"
+    depends_on:
+      log-producer-a:
+        condition: service_started
+      log-producer-b:
+        condition: service_started
+    environment:
+      - GATEWAY_PORT=8080
+      - REGION_A_ENDPOINT=http://log-producer-a:8081
+      - REGION_B_ENDPOINT=http://log-producer-b:8081
+    restart: unless-stopped
+
+# =============================================================================
+# OBSERVABILITY
+# =============================================================================
+
+  # ── Prometheus ───────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    networks: [log-mesh]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libs
+      - --web.console.templates=/etc/prometheus/console
+    restart: unless-stopped
+
+  # ── Grafana ──────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    networks: [log-mesh]
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - ./monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana-datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Editor
+    restart: unless-stopped
+
+# ── Persistent volumes ───────────────────────────────────────────────────────
+volumes:
+  pgdata:
