@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "title": "Backpressure Monitoring",
+    "panels": [
+      {
+        "title": "Consumer Lag",
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Rate Limiter Available Permissions",
+        "targets": [
+          {
+            "expr": "rate_limiter_available_permissions"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Circuit Breaker State",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_state"
+          }
+        ],
+        "type": "stat"
+      }
+    ]
+  }
+}
