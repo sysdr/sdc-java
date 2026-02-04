@@ -1,0 +1,203 @@
+# =============================================================================
+# Docker Compose — Full Infrastructure Stack
+# =============================================================================
+# Services:
+#   Infrastructure: kafka, zookeeper, postgres, redis
+#   Application:    api-gateway, log-producer, log-consumer
+#   Observability:  prometheus, grafana
+#
+# Network: all services on a single bridge (lognet).
+# In production: separate networks per security boundary.
+# =============================================================================
+version: '3.8'
+
+networks:
+  lognet:
+    driver: bridge
+
+# --- Shared health-check interval ---
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 10s
+  timeout: 5s
+  retries: 5
+
+# ===========================================================================
+# INFRASTRUCTURE
+# ===========================================================================
+services:
+  # --- ZooKeeper (Kafka dependency) ---
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    networks: [lognet]
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zk-data:/var/lib/zookeeper/data
+
+  # --- Kafka ---
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    networks: [lognet]
+    ports:
+      - "9092:9092"        # Internal (container-to-container)
+      - "9093:9093"        # External (host access for load tests)
+    depends_on:
+      zookeeper:
+        condition: service_started
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168        # 7 days retention
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824   # 1 GB segments
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  # --- PostgreSQL ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    networks: [lognet]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: loguser
+      POSTGRES_PASSWORD: logpass
+      POSTGRES_DB: logdb
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U loguser -d logdb"]
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+  # --- Redis ---
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    networks: [lognet]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "ping"]
+    volumes:
+      - redis-data:/data
+
+  # ===========================================================================
+  # APPLICATION SERVICES
+  # ===========================================================================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    networks: [lognet]
+    ports:
+      - "8080:8080"
+    depends_on:
+      log-producer:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: api-gateway
+      GATEWAY_PRODUCER_SERVICE_URL: http://log-producer:8081
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/logs/health"]
+
+  log-producer:
+    build:
+      context: .
+      dockerfile: log-producer/Dockerfile
+    container_name: log-producer
+    networks: [lognet]
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: log-producer
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+
+  log-consumer:
+    build:
+      context: .
+      dockerfile: log-consumer/Dockerfile
+    container_name: log-consumer
+    networks: [lognet]
+    ports:
+      - "8082:8082"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: log-consumer
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/logdb
+      SPRING_DATASOURCE_USERNAME: loguser
+      SPRING_DATASOURCE_PASSWORD: logpass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+
+  # ===========================================================================
+  # OBSERVABILITY
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    networks: [lognet]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libs'
+      - '--web.console.templates=/etc/prometheus/console'
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    networks: [lognet]
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    environment:
+      GF_DATASOURCES_PROVISIONING: /etc/grafana/provisioning
+      GF_DASHBOARDS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - ./monitoring/grafana-provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/dashboards:/var/lib/grafana/dashboards:ro
+
+# ===========================================================================
+# VOLUMES
+# ===========================================================================
+volumes:
+  zk-data:
+  kafka-data:
+  pg-data:
+  redis-data:

@@ -1,0 +1,86 @@
+# =============================================================================
+# Log Producer — Configuration
+# =============================================================================
+# Kafka breaker: TIME_BASED window, 5s, 50% threshold.
+#   Rationale: Kafka failures tend to cluster (broker partition, network blip).
+#   A 5-second window catches these fast. 50% threshold is aggressive but
+#   justified: if half our produces are failing, the broker segment is likely dead.
+#
+# Bulkhead: 30 threads. Kafka produce is async (returns a Future), so each
+#   thread is held very briefly. 30 concurrent futures is plenty for high throughput.
+# =============================================================================
+
+spring:
+  application:
+    name: log-producer
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      bootstrap-servers: kafka:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # acks=all ensures the broker commits to all in-sync replicas before acking.
+      # This is the durability/latency trade-off: acks=all is slower but durable.
+      acks: all
+      # linger.ms: wait up to 5ms to batch messages. Reduces round trips at the
+      # cost of 5ms latency. Acceptable for log data.
+      properties:
+        linger.ms: 5
+        compression.type: gzip
+
+server:
+  port: 8081
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      kafkaDefault:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        slowCallRateThreshold: 70
+        slowCallDurationThreshold: 3000
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 2
+        minimumNumberOfCalls: 3
+    instances:
+      kafkaBroker:
+        baseConfig: kafkaDefault
+
+  bulkhead:
+    configs:
+      default:
+        maxConcurrentCalls: 30
+        maxWaitDuration: 200ms
+    instances:
+      kafkaBulkhead:
+        baseConfig: default
+
+  retry:
+    configs:
+      default:
+        maxAttempts: 2
+        waitDuration: 100ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+    instances:
+      kafkaRetry:
+        baseConfig: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: log-producer
+
+logging:
+  level:
+    com.example.logprocessor: DEBUG
+    org.springframework.kafka: INFO

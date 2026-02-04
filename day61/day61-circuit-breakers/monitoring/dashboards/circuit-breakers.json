@@ -1,0 +1,195 @@
+{
+  "__inputs": [],
+  "annotations": { "list": [] },
+  "description": "Day 61 — Circuit Breaker Health Dashboard",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "🔌 Circuit Breaker States",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Open Circuit Breakers",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(resilience4j_circuitbreaker_state{state=\"open\"})",
+          "legendFormat": "Open Breakers"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
+      "id": 2,
+      "title": "Fallback Invocations (5m rate)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(resilience4j_circuitbreaker_fallback_total[5m]))",
+          "legendFormat": "Fallbacks/sec"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+      "id": 3,
+      "title": "Dead Letter Buffer Size",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "producer_kafka_deadletter_buffer_size + consumer_postgres_write_buffer_size",
+          "legendFormat": "Buffered Events"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "📊 Throughput & Latency",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 4,
+      "title": "Log Ingest Rate (events/sec)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(gateway_log_ingest_total[1m])",
+          "legendFormat": "Ingested"
+        },
+        {
+          "expr": "rate(gateway_log_ingest_errors_total[1m])",
+          "legendFormat": "Errors"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 5,
+      "title": "Kafka Produce Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(producer_kafka_produce_success_total[1m])",
+          "legendFormat": "Produced"
+        },
+        {
+          "expr": "rate(producer_kafka_produce_fallback_total[1m])",
+          "legendFormat": "Fallback (DLQ)"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 6,
+      "title": "PostgreSQL Write Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(consumer_postgres_write_success_total[1m])",
+          "legendFormat": "Persisted"
+        },
+        {
+          "expr": "rate(consumer_postgres_write_fallback_total[1m])",
+          "legendFormat": "Buffered"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 7,
+      "title": "Consumer Kafka Consumption",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(consumer_kafka_consumed_total[1m])",
+          "legendFormat": "Consumed"
+        },
+        {
+          "expr": "rate(consumer_kafka_consume_errors_total[1m])",
+          "legendFormat": "Consume Errors"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 102,
+      "title": "⚠️ Failure Analysis",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "id": 8,
+      "title": "Circuit Breaker Failure Rate (%)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "resilience4j_circuitbreaker_failure_rate",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+      "id": 9,
+      "title": "Dead Letter Drops (data loss events)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(producer_kafka_deadletter_dropped_total[1m])",
+          "legendFormat": "Drops/sec"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["circuit-breaker", "day61", "resilience"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Day 61 — Circuit Breaker Health",
+  "version": 1
+}

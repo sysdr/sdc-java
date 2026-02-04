@@ -1,0 +1,108 @@
+# =============================================================================
+# Log Consumer — Configuration
+# =============================================================================
+# PostgreSQL breaker: TIME_BASED, 10s window, 60% threshold.
+#   Why 60%? PostgreSQL under connection pool pressure will have a mix of
+#   successes and failures. 60% lets us tolerate transient pool exhaustion
+#   without tripping the breaker on brief spikes.
+#
+# Redis breaker: COUNT_BASED, threshold 3.
+#   Redis failures are almost always binary (connection refused or timeout).
+#   3 failures = definitely down. No need for a time window.
+# =============================================================================
+
+spring:
+  application:
+    name: log-consumer
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/logdb
+    username: loguser
+    password: logpass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: update          # Auto-create tables. Production: use Flyway/Liquibase.
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  redis:
+    host: redis
+    port: 6379
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      bootstrap-servers: kafka:9092
+      group-id: log-consumer-group
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.example.logprocessor.*,java.util.*"
+
+server:
+  port: 8082
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      postgresDefault:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 60
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 5000
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+      redisDefault:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        failureRateThreshold: 60
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 2
+        minimumNumberOfCalls: 3
+    instances:
+      postgresWriter:
+        baseConfig: postgresDefault
+      redisCache:
+        baseConfig: redisDefault
+
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 200ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+    instances:
+      postgresRetry:
+        baseConfig: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: log-consumer
+
+logging:
+  level:
+    com.example.logprocessor: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: INFO

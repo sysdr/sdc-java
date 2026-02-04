@@ -1,0 +1,78 @@
+# =============================================================================
+# API Gateway — Configuration
+# =============================================================================
+# Key decisions documented inline:
+#   - Circuit breaker on the producer client (not on Kafka directly — the
+#     gateway never touches Kafka; that's log-producer's job).
+#   - Bulkhead thread pool sized at 20: enough for concurrent HTTP forwards,
+#     small enough to fail fast if producer is dead.
+#   - Retry: 3 attempts with exponential backoff (200ms base). Retry is
+#     INSIDE the circuit breaker — see ProducerClient for why.
+# =============================================================================
+
+spring:
+  application:
+    name: api-gateway
+
+server:
+  port: 8080
+
+gateway:
+  producer-service:
+    url: http://log-producer:8081
+
+# --- Resilience4j ---
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 10                # 10-second window
+        failureRateThreshold: 50             # Trip at 50% failure rate
+        slowCallRateThreshold: 80            # Also trip if 80% of calls are slow
+        slowCallDurationThreshold: 2000      # "Slow" = > 2 seconds
+        waitDurationInOpenState: 15s         # Stay open 15s before half-open probe
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5              # Need at least 5 calls before evaluating
+    instances:
+      producerService:
+        baseConfig: default
+
+  bulkhead:
+    configs:
+      default:
+        maxConcurrentCalls: 20
+        maxWaitDuration: 100ms              # If all 20 threads busy, wait max 100ms
+    instances:
+      producerBulkhead:
+        baseConfig: default
+
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 200ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+    instances:
+      producerRetry:
+        baseConfig: default
+
+# --- Actuator & Metrics ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: api-gateway
+
+# --- Logging ---
+logging:
+  level:
+    com.example.logprocessor: DEBUG
+    org.springframework.web: INFO
