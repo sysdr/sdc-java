@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: chaos-engine
+
+logging:
+  level:
+    com.example.chaos: DEBUG
+    com.github.dockerjava: WARN
