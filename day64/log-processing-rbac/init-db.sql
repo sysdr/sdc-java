@@ -1,0 +1,3 @@
+-- Create databases (PostgreSQL doesn't support IF NOT EXISTS for CREATE DATABASE)
+-- These will be created automatically by Spring Boot JPA ddl-auto: update
+-- Indexes will also be created automatically by JPA

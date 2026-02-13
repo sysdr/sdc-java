@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/authdb
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+server:
+  port: 8081
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-please-make-it-long-enough-for-hmac-sha256}
+  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY:900}    # 15 minutes
+  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY:604800} # 7 days
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
