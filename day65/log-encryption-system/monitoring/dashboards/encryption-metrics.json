@@ -1,0 +1,27 @@
+{
+  "dashboard": {
+    "title": "Log Encryption System",
+    "panels": [
+      {
+        "title": "Encryption Operations/sec",
+        "targets": [{"expr": "rate(encryption_operations_total[1m])"}],
+        "type": "graph"
+      },
+      {
+        "title": "Decryption Operations/sec",
+        "targets": [{"expr": "rate(decryption_operations_total[1m])"}],
+        "type": "graph"
+      },
+      {
+        "title": "Encryption Latency (p99)",
+        "targets": [{"expr": "histogram_quantile(0.99, encryption_operation_duration_seconds_bucket)"}],
+        "type": "graph"
+      },
+      {
+        "title": "Log Events Processed",
+        "targets": [{"expr": "rate(log_events_processed_total[1m])"}],
+        "type": "graph"
+      }
+    ]
+  }
+}

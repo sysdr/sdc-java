@@ -1,0 +1,77 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Secrets and API Keys
+secrets/
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+*.truststore
+api-keys.txt
+secrets.txt
+credentials.txt
+*.secret
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Build artifacts
+*.jar
+!**/src/**/*.jar
+*.war
+*.ear
+*.nar
+
+# Compiled classes
+*.class
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Application specific
+application-local.yml
+application-dev.yml
+application-prod.yml
