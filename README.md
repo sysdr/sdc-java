@@ -1,3 +1,10 @@
+# NOTE : 
+---------------
+> ## All lessons are moved to - https://github.com/sysdr/course-p.git
+> ## Upgrade to access all lessons  http://sdcourse.substack.com/subscribe
+-----------
+
+
 ## Hands-on System Design: Distributed Log Processing with Java & Spring Boot
 
 curriculum : https://sdcourse.substack.com/p/curriculum-distributed-log-implementation
