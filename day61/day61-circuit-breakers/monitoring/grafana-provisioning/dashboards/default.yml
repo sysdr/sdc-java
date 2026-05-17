@@ -1,8 +1,0 @@
-apiVersion: 1
-providers:
-  - name: 'Circuit Breaker Dashboards'
-    orgId: 1
-    folder: 'Day 61'
-    type: file
-    options:
-      path: /var/lib/grafana/dashboards
