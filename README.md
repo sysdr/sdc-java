@@ -1,6 +1,6 @@
 # NOTE : 
 ---------------
-> ## All lessons are moved to - https://github.com/sysdr/course-p.git
+> ## All lessons are moved to - https://github.com/sysdr/sdc-java-p.git
 > ## Upgrade to access all lessons  http://sdcourse.substack.com/subscribe
 -----------
 
